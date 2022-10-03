@@ -1,0 +1,52 @@
+﻿@typeparam TEntity
+
+@using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
+
+<BlazoredTypeahead SearchMethod="Search" TValue="TEntity" TItem="TEntity" Value="Entity" ValueChanged="SelectedResultChanged" ValueExpression="@(() => Entity)">
+    <SelectedTemplate Context="_context2">
+        @_context2
+    </SelectedTemplate>
+    <ResultTemplate Context="_context2">
+        @_context2 (@_context2.Id)
+    </ResultTemplate>
+</BlazoredTypeahead>
+
+<div class="input-group-append">
+    <button class="btn btn-outline-secondary" type="button"><span class="oi oi-magnifying-glass" aria-hidden="true" @onclick="MagnifyGlassClick"></span></button>
+    @*<button class="btn btn-outline-secondary" type="button"><span class="oi oi-ellipses" aria-hidden="true"></span></button>*@
+</div>
+
+@code {
+
+    [Parameter]
+    public TEntity Entity { get; set; }
+
+    [Parameter]
+    public EventCallback<TEntity> EntityChanged { get; set; }
+
+    [Parameter]
+    public IView View { get; set; }
+
+    public void MagnifyGlassClick()
+    {
+        if (Entity != null)
+        {
+            NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
+        }
+    }
+
+    private async Task<IEnumerable<TEntity>> Search(string arg)
+    {
+        var data = View.GetData(arg);
+
+        return await data.Cast<TEntity>().Take(10).ToListAsync();
+    }
+
+    private async Task SelectedResultChanged(TEntity result)
+    {
+        Entity = result;
+        
+        await EntityChanged.InvokeAsync(result);
+    }
+}

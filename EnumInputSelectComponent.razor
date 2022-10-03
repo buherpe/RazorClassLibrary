@@ -1,0 +1,29 @@
+﻿@typeparam TEntity
+
+<InputSelect class="custom-select" @bind-Value="@Value2">
+    @foreach (var type in Enum.GetValues<TEntity>())
+    {
+        <option value="@(Convert.ToInt32(type))">@Convert.ToInt32(type) - @type.GetDisplayName()</option>
+    }
+</InputSelect>
+
+@code {
+
+    private int _value2;
+
+    [Parameter]
+    public int Value2
+    {
+        get => _value2;
+        set
+        {
+            if (_value2 == value) return;
+            _value2 = value;
+            Value2Changed.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<int> Value2Changed { get; set; }
+
+}
