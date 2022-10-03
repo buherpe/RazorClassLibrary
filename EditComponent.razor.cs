@@ -19,12 +19,13 @@ namespace RazorClassLibrary
 
         public TEntity Entity { get; set; } = new();
 
-        public bool Loading { get; set; }
+        public bool Loading { get; set; } = true;
 
         [Parameter]
         public TView View { get; set; } = new();
 
-        protected override async Task OnInitializedAsync()
+        // https://stackoverflow.com/q/63955228
+        protected override async Task OnParametersSetAsync()
         {
             Loading = true;
 
