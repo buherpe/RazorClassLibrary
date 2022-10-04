@@ -22,9 +22,10 @@ else
     <table class="table">
         <thead>
             <tr>
-                @foreach (var q in _fieldDisplayNames)
+                <th></th>
+                @foreach (var columnHeader in _fieldDisplayNames)
                 {
-                    <th>@q</th>
+                    <th>@columnHeader</th>
                 }
                 <th></th>
             </tr>
@@ -33,12 +34,14 @@ else
             @foreach (var entity in _entities)
             {
                 <tr>
+                    <td>
+                        <button @onclick="() => TrClicked(entity)" type="button" class="btn btn-outline-primary">Открыть</button>
+                    </td>
                     @foreach (var key in entity.Keys)
                     {
                         <td>@(entity[key])</td>
                     }
                     <td>
-                        <button @onclick="() => TrClicked(entity)" type="button" class="btn btn-primary">Открыть</button>
                         <button @onclick="async () => await TrClickedDelete(entity)" type="button" class="btn btn-danger">Удалить</button>
                     </td>
                 </tr>
