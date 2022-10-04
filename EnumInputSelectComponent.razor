@@ -1,6 +1,6 @@
 ﻿@typeparam TEntity
 
-<InputSelect class="custom-select" @bind-Value="@Value2">
+<InputSelect class="custom-select form-select" @bind-Value="@Value2">
     @foreach (var type in Enum.GetValues<TEntity>())
     {
         <option value="@(Convert.ToInt32(type))">@Convert.ToInt32(type) - @type.GetDisplayName()</option>
