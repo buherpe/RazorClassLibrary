@@ -19,10 +19,10 @@ else
     }
 
     @*  table-hover @ondblclick="() => TrClicked(entity)"*@
-    <table class="table">
+    <table class="table table-sm">
         <thead>
             <tr>
-                <th></th>
+                <th>Открыть</th>
                 @foreach (var columnHeader in _fieldDisplayNames)
                 {
                     <th>@columnHeader</th>
@@ -35,7 +35,7 @@ else
             {
                 <tr>
                     <td>
-                        <button @onclick="() => TrClicked(entity)" type="button" class="btn btn-outline-primary">Открыть</button>
+                        <button @onclick="() => TrClicked(entity)" type="button" class="btn btn-outline-secondary"><span class="oi oi-magnifying-glass" aria-hidden="true"></span></button>
                     </td>
                     @foreach (var key in entity.Keys)
                     {
