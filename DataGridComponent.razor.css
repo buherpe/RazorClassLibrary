@@ -1,9 +1,9 @@
 ﻿table {
-    table-layout: fixed;
+    /*table-layout: fixed;*/
 }
 
 th, td {
-    white-space: nowrap;
+    /*white-space: nowrap;
     text-overflow: ellipsis;
-    overflow: hidden;
+    overflow: hidden;*/
 }
