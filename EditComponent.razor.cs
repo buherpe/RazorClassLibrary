@@ -43,12 +43,19 @@ namespace RazorClassLibrary
 
             //var f = new TFactory();
             Context.Set<TEntity>().Update(Entity);
+
+            var isNew = Entity.Id == 0;
             
             await Context.SaveChangesAsync();
 
-            NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
+            Context = new TContext();
 
-            await Load(Entity.Id);
+            if (isNew)
+            {
+                NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
+            }
+
+            //await Load(Entity.Id);
 
             Loading = false;
         }
