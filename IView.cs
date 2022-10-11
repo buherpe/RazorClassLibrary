@@ -9,7 +9,7 @@ namespace RazorClassLibrary
 {
     public interface IView
     {
-        IQueryable GetData(string? filter = null);
+        IQueryable GetData(string filter = null);
 
         string GetName();
 
@@ -34,7 +34,7 @@ namespace RazorClassLibrary
         where TBaseFactory : BaseFactory<TEntity, TContext>, new()
         where TContext : DbContext, new()
     {
-        public virtual IQueryable GetData(string? filter)
+        public virtual IQueryable GetData(string filter)
         {
             throw new System.NotImplementedException();
         }
@@ -72,7 +72,7 @@ namespace RazorClassLibrary
 
     public interface IBaseFactory
     {
-        Task<IEntity?> GetById(int id);
+        Task<IEntity> GetById(int id);
 
         Task Delete(IEntity entity, bool saveChanges = true, CancellationToken cancellationToken = default);
     }
@@ -110,7 +110,7 @@ namespace RazorClassLibrary
         //    //EntityType = typeof(TEntity);
         //}
 
-        public async Task<IEntity?> GetById(int id)
+        public async Task<IEntity> GetById(int id)
         {
             return await Context.Set<TEntity>().FirstOrDefaultAsync(x => x.Id == id);
         }

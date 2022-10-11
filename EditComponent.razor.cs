@@ -24,8 +24,11 @@ namespace RazorClassLibrary
         [Parameter]
         public TView View { get; set; } = new();
 
+        public TContext Context { get; set; } = new();
+
         // https://stackoverflow.com/q/63955228
-        protected override async Task OnParametersSetAsync()
+        //protected override async Task OnParametersSetAsync()
+        protected override async Task OnInitializedAsync()
         {
             Loading = true;
 
@@ -38,9 +41,10 @@ namespace RazorClassLibrary
         {
             Loading = true;
 
-            var f = new TFactory();
-            f.Context.Set<TEntity>().Update(Entity);
-            await f.Context.SaveChangesAsync();
+            //var f = new TFactory();
+            Context.Set<TEntity>().Update(Entity);
+            
+            await Context.SaveChangesAsync();
 
             NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
 
@@ -51,9 +55,9 @@ namespace RazorClassLibrary
 
         public async Task Load(int id)
         {
-            var f = new TFactory();
-
-            var dbSet = f.Context.Set<TEntity>();
+            //var f = new TFactory();
+            
+            var dbSet = Context.Set<TEntity>();
 
             var queryable = Include(dbSet);
 
