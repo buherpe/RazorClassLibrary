@@ -1,0 +1,63 @@
+﻿@typeparam TEntity
+
+@using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
+
+<input class="form-control" value="@Entity" type="text" readonly />
+<button class="btn btn-outline-secondary" type="button" @onclick="async () => await Clear()">
+    <span class="oi oi-x" aria-hidden="true"></span>
+</button>
+<button class="btn btn-outline-secondary" type="button" @onclick="MagnifyGlassClick">
+    <span class="oi oi-magnifying-glass" aria-hidden="true"></span>
+</button>
+<button class="btn btn-outline-secondary" type="button" @onclick="async () => await Open()">
+    <span class="oi oi-ellipses" aria-hidden="true"></span>
+</button>
+
+@code {
+
+    [Parameter]
+    public TEntity Entity { get; set; }
+
+    [Parameter]
+    public EventCallback<TEntity> EntityChanged { get; set; }
+
+    [Parameter]
+    public IView View { get; set; }
+
+    [CascadingParameter]
+    public IModalService Modal { get; set; } = default!;
+
+    public void MagnifyGlassClick()
+    {
+        if (Entity != null)
+        {
+            NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
+        }
+    }
+
+    public async Task Open()
+    {
+        var parameters = new ModalParameters();
+        parameters.Add(nameof(View), View);
+        parameters.Add("CreateButtonVisible", false);
+        parameters.Add("ChooseOneEntity", true);
+        parameters.Add("DeleteButtonVisible", false);
+        parameters.Add("ShowHeader", false);
+
+        var modal = Modal.Show<DataGridComponent>(View.GetNames(), parameters);
+        var modalResult = await modal.Result;
+
+        if (modalResult.Confirmed)
+        {
+            Entity = ((TEntity)modalResult.Data);
+            await EntityChanged.InvokeAsync(Entity);
+        }
+    }
+
+    public async Task Clear()
+    {
+        Entity = null;
+        await EntityChanged.InvokeAsync(Entity);
+    }
+}

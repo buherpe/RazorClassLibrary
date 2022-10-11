@@ -5,7 +5,10 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime;
 
-<h3>@View.GetNames()</h3>
+@if (ShowHeader)
+{
+    <h3>@View.GetNames()</h3>
+}
 
 @if (Loading)
 {
@@ -22,12 +25,17 @@ else
     <table class="table table-sm">
         <thead>
             <tr>
-                <th>Открыть</th>
+                @*<th>Открыть</th>*@
+                <th>@(ChooseOneEntity ? "Выбрать" : "Открыть")</th>
                 @foreach (var columnHeader in _fieldDisplayNames)
                 {
                     <th>@columnHeader</th>
                 }
-                <th></th>
+
+                @if (DeleteButtonVisible)
+                {
+                    <th></th>
+                }
             </tr>
         </thead>
         <tbody>
@@ -35,15 +43,26 @@ else
             {
                 <tr>
                     <td>
-                        <button @onclick="() => TrClicked(entity)" type="button" class="btn btn-outline-secondary"><span class="oi oi-magnifying-glass" aria-hidden="true"></span></button>
+                        @if (ChooseOneEntity)
+                        {
+                            <button @onclick="() => TrClicked(entity)" type="button" class="btn btn-outline-secondary">Выбрать</button>
+                        }
+                        else
+                        {
+                            <button @onclick="() => TrClicked(entity)" type="button" class="btn btn-outline-secondary"><span class="oi oi-magnifying-glass" aria-hidden="true"></span></button>
+                        }
                     </td>
                     @foreach (var key in entity.Keys)
                     {
                         <td>@(entity[key])</td>
                     }
-                    <td>
-                        <button @onclick="async () => await TrClickedDelete(entity)" type="button" class="btn btn-danger">Удалить</button>
-                    </td>
+                    @if (DeleteButtonVisible)
+                    {
+                        <td>
+                            <button @onclick="async () => await TrClickedDelete(entity)" type="button" class="btn btn-danger">Удалить</button>
+                        </td>
+                    }
+
                 </tr>
             }
         </tbody>
@@ -68,7 +87,22 @@ else
 
     public bool Loading { get; set; } = true;
 
-    protected override async Task OnParametersSetAsync()
+    [Parameter]
+    public bool ChooseOneEntity { get; set; } = false;
+
+    [Parameter]
+    public bool DeleteButtonVisible { get; set; } = true;
+
+    [Parameter]
+    public bool ShowHeader { get; set; } = true;
+
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    public List<IEntity> Entities { get; set; } = new List<IEntity>();
+
+    //protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
         Loading = true;
 
@@ -96,11 +130,15 @@ else
             .Select(x => x.FieldAttribute.DisplayName)
             .ToList();
 
-        var data = await View.GetData().Cast<object>().ToListAsync();
+        Entities = await View.GetData().Cast<IEntity>().ToListAsync();
+
+//#if DEBUG
+//    await Task.Delay(500);
+//#endif
 
         _entities = new List<Dictionary<string, string>>();
 
-        foreach (var entity in data)
+        foreach (var entity in Entities)
         {
             var viewType = View.GetType();
             var newView = Activator.CreateInstance(viewType);
@@ -140,7 +178,16 @@ else
 
     public void TrClicked(Dictionary<string, string> entity)
     {
-        NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{entity["Id"]}");
+        var id = int.Parse(entity["Id"]);
+
+        if (ChooseOneEntity)
+        {
+            BlazoredModal.CloseAsync(ModalResult.Ok(Entities.FirstOrDefault(x => x.Id == id)));
+        }
+        else
+        {
+            NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{entity["Id"]}");
+        }
     }
 
     public async Task TrClickedDelete(Dictionary<string, string> entity)
