@@ -1,7 +1,9 @@
 ﻿@using System.Reflection
 @using System.Dynamic
+@using System.IO
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.JSInterop
+@using System.Text
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime;
 
@@ -16,10 +18,27 @@
 }
 else
 {
-    @if (CreateButtonVisible)
+    @*@if (CreateButtonVisible)
     {
         <p><button @onclick="Create" type="button" class="btn btn-primary">Создать</button></p>
-    }
+    }*@
+
+    <div class="hstack gap-3">
+        @if (CreateButtonVisible)
+        {
+            <button @onclick="Create" type="button" class="btn btn-primary">Создать</button>
+        }
+        <div class="ms-auto">
+            <button @onclick="DownloadFileFromStream" type="button" class="btn btn-outline-secondary" title="Скачать в CSV">
+                <span class="oi oi-data-transfer-download" aria-hidden="true"></span>
+            </button>
+        </div>
+        <div>
+            <button @onclick="LoadData" type="button" class="btn btn-outline-secondary" title="Обновить">
+                <span class="oi oi-loop-circular" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
 
     @*  table-hover @ondblclick="() => TrClicked(entity)"*@
     <table class="table table-sm">
@@ -104,15 +123,17 @@ else
     //protected override async Task OnParametersSetAsync()
     protected override async Task OnInitializedAsync()
     {
-        Loading = true;
+        //Loading = true;
 
         await LoadData();
 
-        Loading = false;
+        //Loading = false;
     }
 
     public async Task LoadData()
     {
+        Loading = true;
+
         var props = View
             .GetType()
             .GetProperties()
@@ -132,9 +153,9 @@ else
 
         Entities = await View.GetData().Cast<IEntity>().ToListAsync();
 
-//#if DEBUG
-//    await Task.Delay(500);
-//#endif
+        //#if DEBUG
+        //    await Task.Delay(500);
+        //#endif
 
         _entities = new List<Dictionary<string, string>>();
 
@@ -174,6 +195,8 @@ else
 
             _entities.Add(fieldNameValue);
         }
+
+        Loading = false;
     }
 
     public void TrClicked(Dictionary<string, string> entity)
@@ -209,13 +232,39 @@ else
         //context.Remove(entity2);
         //await context.SaveChangesAsync();
 
-        Loading = true;
+        //Loading = true;
         await LoadData();
-        Loading = false;
+        //Loading = false;
     }
 
     public void Create()
     {
         NavigationManager.NavigateTo($"/{View.GetEntityNames()}/0");
+    }
+
+    private Stream GetFileStream()
+    {
+        var columns = string.Join(",", _fieldDisplayNames.Select(x => Helper.StringToCSVCell(x)));
+
+        var data = $"";
+
+        foreach (var entity in _entities)
+        {
+            data += $"{string.Join(",", entity.Values.Select(x => Helper.StringToCSVCell(x)))}\r\n";
+        }
+
+        var fileStream = new MemoryStream(Encoding.UTF8.GetBytes($"{columns}\r\n{data}"));
+
+        return fileStream;
+    }
+
+    private async Task DownloadFileFromStream()
+    {
+        var fileStream = GetFileStream();
+        var fileName = $"{DateTime.UtcNow:yyyy-MM-dd_HH-mm-ss}.csv";
+
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
 }
