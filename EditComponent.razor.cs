@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -26,10 +27,15 @@ namespace RazorClassLibrary
 
         public TContext Context { get; set; } = new();
 
+        public EditContext editContext;
+
         // https://stackoverflow.com/q/63955228
         //protected override async Task OnParametersSetAsync()
         protected override async Task OnInitializedAsync()
         {
+            editContext = new(Entity);
+            editContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
+
             Loading = true;
 
             await Load(Id);

@@ -1,9 +1,10 @@
 ﻿@typeparam TEntity
 
 @using Microsoft.EntityFrameworkCore
+@using System.Linq.Expressions
 @inject NavigationManager NavigationManager
 
-<input class="form-control" value="@Entity" type="text" readonly />
+<input class="form-control @FieldCssClasses" value="@Entity" type="text" readonly />
 <button class="btn btn-outline-secondary" type="button" @onclick="async () => await Clear()">
     <span class="oi oi-x" aria-hidden="true"></span>
 </button>
@@ -16,6 +17,9 @@
 
 @code {
 
+    [CascadingParameter] 
+    private EditContext CascadedEditContext { get; set; }
+
     [Parameter]
     public TEntity Entity { get; set; }
 
@@ -23,10 +27,25 @@
     public EventCallback<TEntity> EntityChanged { get; set; }
 
     [Parameter]
+    public Expression<Func<TEntity>> EntityExpression { get; set; }
+
+    [Parameter]
     public IView View { get; set; }
 
     [CascadingParameter]
     public IModalService Modal { get; set; } = default!;
+
+    private FieldIdentifier _fieldIdentifier;
+
+    private EditContext _editContext;
+
+    private string FieldCssClasses => _editContext?.FieldCssClass(_fieldIdentifier) ?? "";
+
+    protected override void OnInitialized()
+    {
+        _editContext = CascadedEditContext;
+        _fieldIdentifier = FieldIdentifier.Create(EntityExpression);
+    }
 
     public void MagnifyGlassClick()
     {
@@ -52,6 +71,7 @@
         {
             Entity = ((TEntity)modalResult.Data);
             await EntityChanged.InvokeAsync(Entity);
+            CascadedEditContext?.NotifyFieldChanged(_fieldIdentifier);
         }
     }
 
@@ -59,5 +79,6 @@
     {
         Entity = null;
         await EntityChanged.InvokeAsync(Entity);
+        CascadedEditContext?.NotifyFieldChanged(_fieldIdentifier);
     }
 }
