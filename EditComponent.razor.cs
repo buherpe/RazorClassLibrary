@@ -18,7 +18,7 @@ namespace RazorClassLibrary
         [Parameter]
         public int Id { get; set; }
 
-        public TEntity Entity { get; set; } = new();
+        public TEntity Entity { get; set; }
 
         public bool Loading { get; set; } = true;
 
@@ -33,9 +33,6 @@ namespace RazorClassLibrary
         //protected override async Task OnParametersSetAsync()
         protected override async Task OnInitializedAsync()
         {
-            editContext = new(Entity);
-            editContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
-
             Loading = true;
 
             await Load(Id);
@@ -45,13 +42,18 @@ namespace RazorClassLibrary
 
         public async Task Save()
         {
+            if (!editContext.Validate())
+            {
+                return;
+            }
+
             Loading = true;
 
             //var f = new TFactory();
             Context.Set<TEntity>().Update(Entity);
 
             var isNew = Entity.Id == 0;
-            
+
             await Context.SaveChangesAsync();
 
             Context = new TContext();
@@ -75,6 +77,9 @@ namespace RazorClassLibrary
             var queryable = Include(dbSet);
 
             Entity = await queryable.FirstOrDefaultAsync(x => x.Id == id) ?? new TEntity();
+
+            editContext = new(Entity);
+            editContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
         }
 
         public virtual IQueryable<TEntity> Include(DbSet<TEntity> dbSet)
