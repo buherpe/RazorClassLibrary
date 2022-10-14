@@ -120,13 +120,12 @@ else
 
     public List<IEntity> Entities { get; set; } = new List<IEntity>();
 
-    //protected override async Task OnParametersSetAsync()
     protected override async Task OnInitializedAsync()
     {
         //Loading = true;
 
         await LoadData();
-
+        
         //Loading = false;
     }
 

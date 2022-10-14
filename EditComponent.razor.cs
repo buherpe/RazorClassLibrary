@@ -30,8 +30,11 @@ namespace RazorClassLibrary
         public EditContext editContext;
 
         // https://stackoverflow.com/q/63955228
-        //protected override async Task OnParametersSetAsync()
-        protected override async Task OnInitializedAsync()
+        // ситуация: Blazored.Modal вызывал ререндер и поэтому
+        // OnParametersSetAsync срабатывал много раз, вызывая лишний Load
+        // было исправлено в https://github.com/Blazored/Modal/issues/459 (7.1.0)
+        //protected override async Task OnInitializedAsync()
+        protected override async Task OnParametersSetAsync()
         {
             Loading = true;
 
