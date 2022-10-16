@@ -125,7 +125,7 @@ else
         //Loading = true;
 
         await LoadData();
-        
+
         //Loading = false;
     }
 
@@ -188,7 +188,16 @@ else
 
                 if (!prop.FieldAttribute.Serviced)
                 {
-                    fieldNameValue.Add(prop.PropertyInfo.Name, $"{newViewPropValue}");
+                    var formattable = newViewPropValue as IFormattable;
+
+                    if (formattable != null && !string.IsNullOrEmpty(prop.FieldAttribute.Format))
+                    {
+                        fieldNameValue.Add(prop.PropertyInfo.Name, formattable.ToString(prop.FieldAttribute.Format, null));
+                    }
+                    else
+                    {
+                        fieldNameValue.Add(prop.PropertyInfo.Name, $"{newViewPropValue}");
+                    }
                 }
             }
 

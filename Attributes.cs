@@ -11,6 +11,8 @@ namespace RazorClassLibrary
         public string DisplayName { get; set; }
 
         public bool Serviced { get; set; }
+
+        public string Format { get; set; }
     }
 
     public class BindAttribute : Attribute
