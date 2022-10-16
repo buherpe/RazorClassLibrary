@@ -73,13 +73,18 @@ namespace RazorClassLibrary
 
         public async Task Load(int id)
         {
-            //var f = new TFactory();
-            
-            var dbSet = Context.Set<TEntity>();
+            if (id == 0)
+            {
+                Entity = new TEntity();
+            }
+            else
+            {
+                var dbSet = Context.Set<TEntity>();
 
-            var queryable = Include(dbSet);
+                var queryable = Include(dbSet);
 
-            Entity = await queryable.FirstOrDefaultAsync(x => x.Id == id) ?? new TEntity();
+                Entity = await queryable.FirstOrDefaultAsync(x => x.Id == id) ?? new TEntity();
+            }
 
             editContext = new(Entity);
             editContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
