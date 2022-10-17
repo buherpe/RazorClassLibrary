@@ -35,10 +35,12 @@ namespace RazorClassLibrary
         // было исправлено в https://github.com/Blazored/Modal/issues/459 (7.1.0)
         // сейчас не будет работать переход например с таски 5 на 6,
         // потому что OnParametersSetAsync закомменчен
-        // иначе он будет срабатывать многократно при смене наименования например
+        // иначе он будет срабатывать каждый раз при смене наименования например
         protected override async Task OnInitializedAsync()
         //protected override async Task OnParametersSetAsync()
         {
+            //Console.WriteLine($"OnInitializedAsync");
+
             Loading = true;
 
             await Load(Id);
@@ -46,13 +48,20 @@ namespace RazorClassLibrary
             Loading = false;
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        //protected override void OnInitialized()
+        //{
+        //    Console.WriteLine($"OnInitialized");
+        //}
+
+        protected override void OnAfterRender(bool firstRender)
         {
-            Console.WriteLine($"OnAfterRenderAsync");
+            //Console.WriteLine($"OnAfterRenderAsync");
         }
 
         public async Task Save()
         {
+            //Console.WriteLine($"Save");
+
             if (!EditContext.Validate())
             {
                 return;
