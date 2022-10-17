@@ -1,6 +1,12 @@
-﻿@typeparam TEntity
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@typeparam TEntity
 @typeparam TFactory
 @typeparam TView
 @typeparam TContext
 
 @inject NavigationManager NavigationManager
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState { get; set; }
+}

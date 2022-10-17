@@ -53,9 +53,25 @@ namespace RazorClassLibrary
             Loading = true;
 
             //var f = new TFactory();
-            Context.Set<TEntity>().Update(Entity);
-
             var isNew = Entity.Id == 0;
+
+            if (Entity is ICreatedModified createdModifiedEntity)
+            {
+                var user = (await AuthState).User;
+
+                if (isNew)
+                {
+                    createdModifiedEntity.CreatedAt = DateTime.Now;
+                    createdModifiedEntity.CreatedBy = int.Parse(user.FindFirst("Id").Value);
+                }
+                else
+                {
+                    createdModifiedEntity.ModifiedAt = DateTime.Now;
+                    createdModifiedEntity.ModifiedBy = int.Parse(user.FindFirst("Id").Value);
+                }
+            }
+
+            Context.Set<TEntity>().Update(Entity);
 
             await Context.SaveChangesAsync();
 
