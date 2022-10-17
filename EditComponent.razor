@@ -14,9 +14,13 @@
 }
 else
 {
-    <button @onclick="Save" type="button" class="btn btn-primary">Сохранить</button>
-    
-    @Fragment1(this)
+    <p>
+        <button @onclick="Save" type="button" class="btn btn-primary">Сохранить</button>
+
+        @Buttons
+    </p>
+
+    @Fragment1
 }
 
 @code {
@@ -24,5 +28,8 @@ else
     public Task<AuthenticationState> AuthState { get; set; }
 
     [Parameter]
-    public RenderFragment<EditComponent<TEntity, TFactory, TView, TContext>> Fragment1 { get; set; }
+    public RenderFragment Fragment1 { get; set; }
+
+    [Parameter]
+    public RenderFragment Buttons { get; set; }
 }
