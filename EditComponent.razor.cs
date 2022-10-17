@@ -12,7 +12,7 @@ namespace RazorClassLibrary
     public partial class EditComponent<TEntity, TFactory, TView, TContext>
         where TEntity : class, IEntity, new()
         where TFactory : BaseFactory<TEntity, TContext>, new()
-        where TView : IView, new()
+        where TView : BaseView<TEntity, TFactory, TContext>, new()
         where TContext : DbContext, new()
     {
         [Parameter]
@@ -27,14 +27,17 @@ namespace RazorClassLibrary
 
         public TContext Context { get; set; } = new();
 
-        public EditContext editContext;
+        public EditContext EditContext;
 
         // https://stackoverflow.com/q/63955228
         // ситуация: Blazored.Modal вызывал ререндер и поэтому
         // OnParametersSetAsync срабатывал много раз, вызывая лишний Load
         // было исправлено в https://github.com/Blazored/Modal/issues/459 (7.1.0)
-        //protected override async Task OnInitializedAsync()
-        protected override async Task OnParametersSetAsync()
+        // сейчас не будет работать переход например с таски 5 на 6,
+        // потому что OnParametersSetAsync закомменчен
+        // иначе он будет срабатывать многократно при смене наименования например
+        protected override async Task OnInitializedAsync()
+        //protected override async Task OnParametersSetAsync()
         {
             Loading = true;
 
@@ -43,9 +46,14 @@ namespace RazorClassLibrary
             Loading = false;
         }
 
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            Console.WriteLine($"OnAfterRenderAsync");
+        }
+
         public async Task Save()
         {
-            if (!editContext.Validate())
+            if (!EditContext.Validate())
             {
                 return;
             }
@@ -89,26 +97,22 @@ namespace RazorClassLibrary
 
         public async Task Load(int id)
         {
+            //Console.WriteLine($"Load");
+
             if (id == 0)
             {
                 Entity = new TEntity();
             }
             else
             {
-                var dbSet = Context.Set<TEntity>();
+                var queryable = View.Include(Context.Set<TEntity>());
 
-                var queryable = Include(dbSet);
-
+                //await Task.Delay(500);
                 Entity = await queryable.FirstOrDefaultAsync(x => x.Id == id) ?? new TEntity();
             }
 
-            editContext = new(Entity);
-            editContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
-        }
-
-        public virtual IQueryable<TEntity> Include(DbSet<TEntity> dbSet)
-        {
-            return dbSet;
+            EditContext = new(Entity);
+            EditContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
         }
     }
 }

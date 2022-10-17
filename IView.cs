@@ -22,6 +22,8 @@ namespace RazorClassLibrary
         void Qwe(IEntity entity);
 
         IBaseFactory GetNewFactory();
+
+        //IQueryable<IEntity> Include(IQueryable<IEntity> queryable);
     }
 
     public interface IEntity
@@ -67,6 +69,11 @@ namespace RazorClassLibrary
         public IBaseFactory GetNewFactory()
         {
             return new TBaseFactory();
+        }
+
+        public virtual IQueryable<TEntity> Include(IQueryable<TEntity> queryable)
+        {
+            return queryable;
         }
     }
 

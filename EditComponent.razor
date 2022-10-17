@@ -6,7 +6,23 @@
 
 @inject NavigationManager NavigationManager
 
+<h3>@View.GetName(): @Entity</h3>
+
+@if (Loading)
+{
+    <div>Загрузка...</div>
+}
+else
+{
+    <button @onclick="Save" type="button" class="btn btn-primary">Сохранить</button>
+    
+    @Fragment1(this)
+}
+
 @code {
     [CascadingParameter]
     public Task<AuthenticationState> AuthState { get; set; }
+
+    [Parameter]
+    public RenderFragment<EditComponent<TEntity, TFactory, TView, TContext>> Fragment1 { get; set; }
 }
