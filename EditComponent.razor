@@ -17,10 +17,10 @@ else
     <p>
         <button @onclick="Save" type="button" class="btn btn-primary">Сохранить</button>
 
-        @Buttons
+        @AdditionalButtonsTemplate
     </p>
 
-    @Fragment1
+    @MainTemplate
 }
 
 @code {
@@ -28,8 +28,8 @@ else
     public Task<AuthenticationState> AuthState { get; set; }
 
     [Parameter]
-    public RenderFragment Fragment1 { get; set; }
+    public RenderFragment MainTemplate { get; set; }
 
     [Parameter]
-    public RenderFragment Buttons { get; set; }
+    public RenderFragment AdditionalButtonsTemplate { get; set; }
 }
