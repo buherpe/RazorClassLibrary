@@ -21,6 +21,23 @@ else
     </p>
 
     @MainTemplate
+
+    @if (Entity is ICreatedModified createdModifiedEntity)
+    {
+        <hr/>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Дата создания</span>
+            <input class="form-control" readonly
+           @bind-value="createdModifiedEntity.CreatedAt" />
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Дата изменения</span>
+            <input class="form-control" readonly
+           @bind-value="createdModifiedEntity.ModifiedAt" />
+        </div>
+    }
+
+    @FooterTemplate
 }
 
 @code {
@@ -32,4 +49,7 @@ else
 
     [Parameter]
     public RenderFragment AdditionalButtonsTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment FooterTemplate { get; set; }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,7 +26,7 @@ namespace RazorClassLibrary
         [Parameter]
         public TView View { get; set; } = new();
 
-        public TContext Context { get; set; } = new();
+        public TContext Context { get; set; }
 
         public EditContext EditContext;
 
@@ -41,11 +42,11 @@ namespace RazorClassLibrary
         {
             //Console.WriteLine($"OnInitializedAsync");
 
-            Loading = true;
+            //Loading = true;
 
             await Load(Id);
 
-            Loading = false;
+            //Loading = false;
         }
 
         //protected override void OnInitialized()
@@ -74,6 +75,9 @@ namespace RazorClassLibrary
 
             if (Entity is ICreatedModified createdModifiedEntity)
             {
+                Context.Entry(createdModifiedEntity).Property(x => x.CreatedAt).IsModified = false;
+                Context.Entry(createdModifiedEntity).Property(x => x.CreatedBy).IsModified = false;
+
                 var user = (await AuthState).User;
 
                 if (isNew)
@@ -83,30 +87,59 @@ namespace RazorClassLibrary
                 }
                 else
                 {
-                    createdModifiedEntity.ModifiedAt = DateTime.Now;
-                    createdModifiedEntity.ModifiedBy = int.Parse(user.FindFirst("Id").Value);
+                    Context.Entry(createdModifiedEntity).Property(x => x.ModifiedAt).IsModified = false;
+                    Context.Entry(createdModifiedEntity).Property(x => x.ModifiedBy).IsModified = false;
+
+                    if (Context.Entry(Entity).State == EntityState.Modified)
+                    {
+                        createdModifiedEntity.ModifiedAt = DateTime.Now;
+                        createdModifiedEntity.ModifiedBy = int.Parse(user.FindFirst("Id").Value);
+                    }
                 }
             }
 
-            Context.Set<TEntity>().Update(Entity);
+            //Console.WriteLine($"{Context.Entry(Entity).DebugView.LongView}");
+
+            // https://stackoverflow.com/a/50355281/6414543
+            //Context.Set<TEntity>().Update(Entity);
+            var existingEntity = await View.Include(Context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == Entity.Id);
+
+            if (existingEntity == null)
+            {
+                Context.Add(Entity);
+            }
+            else
+            {
+                Context.Entry(existingEntity).CurrentValues.SetValues(Entity);
+            }
 
             await Context.SaveChangesAsync();
 
-            Context = new TContext();
+            //await Context.Entry(Entity).ReloadAsync();
+
+            //Context = new TContext();
+            //Context.Attach(Entity);
+
+            //Entity = await View.Include(Context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == Entity.Id);
 
             if (isNew)
             {
                 NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
             }
 
-            //await Load(Entity.Id);
+            //Id = Entity.Id;
+            await Load(Entity.Id);
 
-            Loading = false;
+            //Loading = false;
         }
 
         public async Task Load(int id)
         {
             //Console.WriteLine($"Load");
+
+            Loading = true;
+
+            Context = new();
 
             if (id == 0)
             {
@@ -114,14 +147,24 @@ namespace RazorClassLibrary
             }
             else
             {
-                var queryable = View.Include(Context.Set<TEntity>());
-
                 //await Task.Delay(500);
-                Entity = await queryable.FirstOrDefaultAsync(x => x.Id == id) ?? new TEntity();
+                
+                var entity = await View.Include(Context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == id);
+
+                if (entity == null)
+                {
+                    Entity = new TEntity();
+                }
+                else
+                {
+                    Entity = entity;
+                }
             }
 
             EditContext = new(Entity);
             EditContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
+
+            Loading = false;
         }
     }
 }
