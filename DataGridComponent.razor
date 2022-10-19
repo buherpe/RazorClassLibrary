@@ -18,15 +18,12 @@
 }
 else
 {
-    @*@if (CreateButtonVisible)
-    {
-        <p><button @onclick="Create" type="button" class="btn btn-primary">Создать</button></p>
-    }*@
-
     <div class="hstack gap-3">
         @if (CreateButtonVisible)
         {
-            <button @onclick="Create" type="button" class="btn btn-primary">Создать</button>
+            <a class="btn btn-primary" href="@($"/{View.GetEntityNames()}/0")" role="button">
+                Создать
+            </a>
         }
         <div class="ms-auto">
             <button @onclick="DownloadFileFromStream" type="button" class="btn btn-outline-secondary" title="Скачать в CSV">
@@ -44,7 +41,6 @@ else
     <table class="table table-sm">
         <thead>
             <tr>
-                @*<th>Открыть</th>*@
                 <th>@(ChooseOneEntity ? "Выбрать" : "Открыть")</th>
                 @foreach (var columnHeader in _fieldDisplayNames)
                 {
@@ -64,11 +60,13 @@ else
                     <td>
                         @if (ChooseOneEntity)
                         {
-                            <button @onclick="() => TrClicked(entity)" type="button" class="btn btn-outline-secondary">Выбрать</button>
+                            <button @onclick="() => ChooseOneEntityClicked(entity)" type="button" class="btn btn-outline-secondary">Выбрать</button>
                         }
                         else
                         {
-                            <button @onclick="() => TrClicked(entity)" type="button" class="btn btn-outline-secondary"><span class="oi oi-magnifying-glass" aria-hidden="true"></span></button>
+                            <a class="btn btn-outline-secondary" href="@($"/{View.GetEntityNames()}/{entity["Id"]}")" role="button">
+                                <span class="oi oi-magnifying-glass" aria-hidden="true"></span>
+                            </a>
                         }
                     </td>
                     @foreach (var key in entity.Keys)
@@ -207,18 +205,11 @@ else
         Loading = false;
     }
 
-    public void TrClicked(Dictionary<string, string> entity)
+    public void ChooseOneEntityClicked(Dictionary<string, string> entity)
     {
         var id = int.Parse(entity["Id"]);
 
-        if (ChooseOneEntity)
-        {
-            BlazoredModal.CloseAsync(ModalResult.Ok(Entities.FirstOrDefault(x => x.Id == id)));
-        }
-        else
-        {
-            NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{entity["Id"]}");
-        }
+        BlazoredModal.CloseAsync(ModalResult.Ok(Entities.FirstOrDefault(x => x.Id == id)));
     }
 
     public async Task TrClickedDelete(Dictionary<string, string> entity)

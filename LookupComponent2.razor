@@ -5,19 +5,32 @@
 @inject NavigationManager NavigationManager
 
 <input class="form-control @FieldCssClasses" value="@Entity" type="text" readonly />
-<button class="btn btn-outline-secondary" type="button" @onclick="async () => await Clear()" title="Очистить">
+
+<button class="btn btn-outline-secondary" type="button" @onclick="Clear" title="Очистить">
     <span class="oi oi-x" aria-hidden="true"></span>
 </button>
-<button class="btn btn-outline-secondary" type="button" @onclick="MagnifyGlassClick" title="Открыть">
-    <span class="oi oi-magnifying-glass" aria-hidden="true"></span>
-</button>
-<button class="btn btn-outline-secondary" type="button" @onclick="async () => await Open()" title="Выбрать">
+
+@if (Entity == null)
+{
+    <a class="btn btn-outline-secondary" role="button" title="Открыть">
+        <span class="oi oi-magnifying-glass" aria-hidden="true"></span>
+    </a>
+}
+else
+{
+    <a class="btn btn-outline-secondary" role="button" title="Открыть"
+   href="@($"/{View.GetEntityNames()}/{Entity.Id}")">
+        <span class="oi oi-magnifying-glass" aria-hidden="true"></span>
+    </a>
+}
+
+<button class="btn btn-outline-secondary" type="button" @onclick="Open" title="Выбрать">
     <span class="oi oi-ellipses" aria-hidden="true"></span>
 </button>
 
 @code {
 
-    [CascadingParameter] 
+    [CascadingParameter]
     private EditContext CascadedEditContext { get; set; }
 
     [Parameter]
@@ -45,14 +58,6 @@
     {
         _editContext = CascadedEditContext;
         _fieldIdentifier = FieldIdentifier.Create(EntityExpression);
-    }
-
-    public void MagnifyGlassClick()
-    {
-        if (Entity != null)
-        {
-            NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
-        }
     }
 
     public async Task Open()
