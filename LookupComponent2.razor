@@ -69,7 +69,7 @@ else
         parameters.Add("DeleteButtonVisible", false);
         parameters.Add("ShowHeader", false);
 
-        var modal = Modal.Show<DataGridComponent>(View.GetNames(), parameters);
+        var modal = Modal.Show<DataGridComponent<TEntity>>(View.GetNames(), parameters);
         var modalResult = await modal.Result;
 
         if (modalResult.Confirmed)

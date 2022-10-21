@@ -6,6 +6,8 @@
 @using System.Text
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime;
+@inject DbContext _context;
+@typeparam TEntity
 
 @if (ShowHeader)
 {
@@ -120,11 +122,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        //Loading = true;
-
         await LoadData();
-
-        //Loading = false;
     }
 
     public async Task LoadData()
@@ -221,19 +219,11 @@ else
             return;
         }
 
-        //var f = new VisitFactory();
-        var f = View.GetNewFactory();
-        var entity2 = await f.GetById(int.Parse(entity["Id"]));
-        await f.Delete(entity2);
+        var entity2 = await _context.Set<TEntity>().FindAsync(int.Parse(entity["Id"]));
+        _context.Remove(entity2);
+        await _context.SaveChangesAsync();
 
-
-        //var context = new MyContext();
-        //context.Remove(entity2);
-        //await context.SaveChangesAsync();
-
-        //Loading = true;
         await LoadData();
-        //Loading = false;
     }
 
     public void Create()
