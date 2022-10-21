@@ -38,11 +38,7 @@ namespace RazorClassLibrary
         {
             //Console.WriteLine($"OnInitializedAsync");
 
-            //Loading = true;
-
             await Load(Id);
-
-            //Loading = false;
         }
 
         //protected override void OnInitialized()

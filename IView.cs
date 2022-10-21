@@ -20,10 +20,6 @@ namespace RazorClassLibrary
         string GetEntityNames();
 
         void Qwe(IEntity entity);
-
-        IBaseFactory GetNewFactory();
-
-        //IQueryable<IEntity> Include(IQueryable<IEntity> queryable);
     }
 
     public interface IEntity
@@ -60,11 +56,6 @@ namespace RazorClassLibrary
         }
 
         public virtual void Qwe(IEntity entity)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public IBaseFactory GetNewFactory()
         {
             throw new System.NotImplementedException();
         }
