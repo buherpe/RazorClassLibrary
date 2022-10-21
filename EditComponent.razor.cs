@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 
 namespace RazorClassLibrary
 {
-    public partial class EditComponent<TEntity, TFactory, TView, TContext>
+    public partial class EditComponent<TEntity, TView>
         where TEntity : class, IEntity, new()
-        where TFactory : BaseFactory<TEntity, TContext>, new()
-        where TView : BaseView<TEntity, TFactory, TContext>, new()
-        where TContext : DbContext, new()
+        where TView : BaseView<TEntity>, new()
     {
         [Parameter]
         public int Id { get; set; }
@@ -25,8 +23,6 @@ namespace RazorClassLibrary
 
         [Parameter]
         public TView View { get; set; } = new();
-
-        public TContext Context { get; set; }
 
         public EditContext EditContext;
 
@@ -139,7 +135,8 @@ namespace RazorClassLibrary
 
             Loading = true;
 
-            Context = new();
+            //todo
+            //Context = new();
 
             if (id == 0)
             {

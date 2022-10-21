@@ -31,10 +31,10 @@ namespace RazorClassLibrary
         int Id { get; set; }
     }
 
-    public class BaseView<TEntity, TBaseFactory, TContext> : IView
+    public class BaseView<TEntity> : IView
         where TEntity : class, IEntity
-        where TBaseFactory : BaseFactory<TEntity, TContext>, new()
-        where TContext : DbContext, new()
+        //where TBaseFactory : BaseFactory<TEntity/*, TContext*/>, new()
+        //where TContext : DbContext, new()
     {
         public virtual IQueryable GetData(string filter)
         {
@@ -68,68 +68,12 @@ namespace RazorClassLibrary
 
         public IBaseFactory GetNewFactory()
         {
-            return new TBaseFactory();
+            throw new System.NotImplementedException();
         }
 
         public virtual IQueryable<TEntity> Include(IQueryable<TEntity> queryable)
         {
             return queryable;
-        }
-    }
-
-    public interface IBaseFactory
-    {
-        Task<IEntity> GetById(int id);
-
-        Task Delete(IEntity entity, bool saveChanges = true, CancellationToken cancellationToken = default);
-    }
-
-    //public class BaseFactory : IBaseFactory
-    //{
-    //    public MyContext Context { get; set; } = new();
-
-    //    public Type EntityType { get; set; }
-
-    //    public async Task<object> GetById(int id)
-    //    {
-    //        return await Context.FindAsync(EntityType, id);
-    //    }
-
-    //    public async Task Delete(object entity, bool saveChanges = true, CancellationToken cancellationToken = default)
-    //    {
-    //        Context.Remove(entity);
-
-    //        if (saveChanges)
-    //        {
-    //            await Context.SaveChangesAsync(cancellationToken);
-    //        }
-    //    }
-    //}
-
-    public class BaseFactory<TEntity, TContext> : IBaseFactory
-        where TEntity : class, IEntity
-        where TContext : DbContext, new()
-    {
-        public TContext Context { get; set; } = new();
-
-        //public BaseFactory()
-        //{
-        //    //EntityType = typeof(TEntity);
-        //}
-
-        public async Task<IEntity> GetById(int id)
-        {
-            return await Context.Set<TEntity>().FirstOrDefaultAsync(x => x.Id == id);
-        }
-
-        public async Task Delete(IEntity entity, bool saveChanges = true, CancellationToken cancellationToken = default)
-        {
-            Context.Remove(entity);
-
-            if (saveChanges)
-            {
-                await Context.SaveChangesAsync(cancellationToken);
-            }
         }
     }
 }

@@ -1,10 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @typeparam TEntity
-@typeparam TFactory
 @typeparam TView
-@typeparam TContext
 
 @inject NavigationManager NavigationManager
+@inject DbContext Context
 
 <PageTitle>@View.GetName(): @Entity</PageTitle>
 
