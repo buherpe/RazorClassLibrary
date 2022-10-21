@@ -33,8 +33,6 @@ namespace RazorClassLibrary
 
     public class BaseView<TEntity> : IView
         where TEntity : class, IEntity
-        //where TBaseFactory : BaseFactory<TEntity/*, TContext*/>, new()
-        //where TContext : DbContext, new()
     {
         public virtual IQueryable GetData(string filter)
         {
