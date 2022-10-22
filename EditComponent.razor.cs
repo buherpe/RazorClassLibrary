@@ -98,7 +98,11 @@ namespace RazorClassLibrary
 
             if (existingEntity == null)
             {
-                Context.Add(Entity);
+                // если делать Add, то связанная сущность пытается сохраниться
+                // например, при создании задачи если выбирать проект, то он становится Added
+                // и при сохранении падает эксепшон что такой проект уже есть
+                //Context.Add(Entity);
+                Context.Entry(Entity).State = EntityState.Added;
             }
             else
             {
