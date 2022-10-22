@@ -42,6 +42,9 @@ else
     @FooterTemplate
 }
 
+<div>EditComponent: @(Context.ContextId)</div>
+<div>@(Context.ChangeTracker.DebugView.ShortView)</div>
+
 @code {
     [CascadingParameter]
     public Task<AuthenticationState> AuthState { get; set; }
