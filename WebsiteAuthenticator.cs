@@ -38,7 +38,7 @@ namespace RazorClassLibrary
 
         public WebsiteAuthenticator(ProtectedLocalStorage protectedLocalStorage, IConfiguration configuration, DbContext dbContext)
         {
-            Console.WriteLine($"WebsiteAuthenticator ctor");
+            //Console.WriteLine($"WebsiteAuthenticator ctor");
 
             _protectedLocalStorage = protectedLocalStorage;
             _configuration = configuration;

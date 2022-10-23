@@ -12,14 +12,20 @@ namespace RazorClassLibrary
         {
             var entries = ChangeTracker.Entries();
 
-            foreach (var entry in entries)
-            {
-                Console.WriteLine($"{entry.Entity} {entry.State}");
-            }
+            //foreach (var entry in entries)
+            //{
+            //    Console.WriteLine($"{entry.Entity} {entry.State}");
+            //}
 
-            Console.WriteLine($"{ChangeTracker.DebugView.ShortView}");
+            //Console.WriteLine($"{ChangeTracker.DebugView.ShortView}");
 
             return base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override void Dispose()
+        {
+            Console.WriteLine($"DbContext2.Dispose");
+            base.Dispose();
         }
     }
 }

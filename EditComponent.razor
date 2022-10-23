@@ -2,9 +2,11 @@
 @using Microsoft.EntityFrameworkCore
 @typeparam TEntity
 @typeparam TView
+@typeparam TContext
 
 @inject NavigationManager NavigationManager
-@inject DbContext Context
+@*@inject TContext Context*@
+@inject IDbContextFactory<TContext> contextFactory
 
 <PageTitle>@View.GetName(): @Entity</PageTitle>
 
@@ -42,8 +44,8 @@ else
     @FooterTemplate
 }
 
-@(Context.ChangeTracker.DebugView.LongView)
-<div>EditComponent: @Context.ContextId</div>
+@(_context.ChangeTracker.DebugView.LongView)
+<div>EditComponent: @_context.ContextId</div>
 
 @code {
     [CascadingParameter]

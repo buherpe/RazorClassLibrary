@@ -10,9 +10,10 @@ using System.Threading.Tasks;
 
 namespace RazorClassLibrary
 {
-    public partial class EditComponent<TEntity, TView>
+    public partial class EditComponent<TEntity, TView, TContext> : IDisposable
         where TEntity : class, IEntity, new()
         where TView : BaseView<TEntity>, new()
+        where TContext : DbContext
     {
         [Parameter]
         public int Id { get; set; }
@@ -25,6 +26,8 @@ namespace RazorClassLibrary
         public TView View { get; set; } = new();
 
         public EditContext EditContext;
+
+        private TContext _context;
 
         // https://stackoverflow.com/q/63955228
         // ситуация: Blazored.Modal вызывал ререндер и поэтому
@@ -69,8 +72,8 @@ namespace RazorClassLibrary
 
             if (Entity is ICreatedModified createdModifiedEntity)
             {
-                Context.Entry(createdModifiedEntity).Property(x => x.CreatedAt).IsModified = false;
-                Context.Entry(createdModifiedEntity).Property(x => x.CreatedBy).IsModified = false;
+                _context.Entry(createdModifiedEntity).Property(x => x.CreatedAt).IsModified = false;
+                _context.Entry(createdModifiedEntity).Property(x => x.CreatedBy).IsModified = false;
 
                 var user = (await AuthState).User;
 
@@ -81,10 +84,10 @@ namespace RazorClassLibrary
                 }
                 else
                 {
-                    Context.Entry(createdModifiedEntity).Property(x => x.ModifiedAt).IsModified = false;
-                    Context.Entry(createdModifiedEntity).Property(x => x.ModifiedBy).IsModified = false;
+                    _context.Entry(createdModifiedEntity).Property(x => x.ModifiedAt).IsModified = false;
+                    _context.Entry(createdModifiedEntity).Property(x => x.ModifiedBy).IsModified = false;
 
-                    if (Context.Entry(Entity).State == EntityState.Modified)
+                    if (_context.Entry(Entity).State == EntityState.Modified)
                     {
                         createdModifiedEntity.ModifiedAt = DateTime.Now;
                         createdModifiedEntity.ModifiedBy = int.Parse(user.FindFirst("Id").Value);
@@ -96,7 +99,7 @@ namespace RazorClassLibrary
 
             // https://stackoverflow.com/a/50355281/6414543
             //Context.Set<TEntity>().Update(Entity);
-            var existingEntity = await View.Include(Context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == Entity.Id);
+            var existingEntity = await View.Include(_context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == Entity.Id);
 
             if (existingEntity == null)
             {
@@ -104,14 +107,14 @@ namespace RazorClassLibrary
                 // например, при создании задачи если выбирать проект, то он становится Added
                 // и при сохранении падает эксепшон что такой проект уже есть
                 //Context.Add(Entity);
-                Context.Entry(Entity).State = EntityState.Added;
+                _context.Entry(Entity).State = EntityState.Added;
             }
             else
             {
-                Context.Entry(existingEntity).CurrentValues.SetValues(Entity);
+                _context.Entry(existingEntity).CurrentValues.SetValues(Entity);
             }
 
-            await Context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             //await Context.Entry(Entity).ReloadAsync();
 
@@ -139,6 +142,8 @@ namespace RazorClassLibrary
 
             //todo
             //Context = new();
+            _context?.Dispose();
+            _context = contextFactory.CreateDbContext();
 
             if (id == 0)
             {
@@ -148,7 +153,7 @@ namespace RazorClassLibrary
             {
                 //await Task.Delay(500);
                 
-                var entity = await View.Include(Context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == id);
+                var entity = await View.Include(_context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == id);
 
                 if (entity == null)
                 {
@@ -158,10 +163,9 @@ namespace RazorClassLibrary
                 {
                     Entity = entity;
 
-                    //foreach (var item in Context.Entry(entity).Navigations)
-                    //{
-                    //    var q = item.EntityEntry;
-                    //}
+                    // 
+                    _context.ChangeTracker.Clear();
+                    _context.Entry(Entity).State = EntityState.Unchanged;
                 }
             }
 
@@ -169,6 +173,12 @@ namespace RazorClassLibrary
             EditContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
 
             Loading = false;
+        }
+
+        public void Dispose()
+        {
+            Console.WriteLine($"EditComponent.Dispose");
+            _context.Dispose();
         }
     }
 }

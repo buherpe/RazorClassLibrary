@@ -144,7 +144,7 @@ else
             .Select(x => x.FieldAttribute.DisplayName)
             .ToList();
 
-        Entities = await View.GetData().Cast<IEntity>().ToListAsync();
+        Entities = await View.GetData().Cast<IEntity>().AsNoTracking().ToListAsync();
 
         //#if DEBUG
         //    await Task.Delay(500);
