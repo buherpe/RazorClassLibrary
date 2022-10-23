@@ -22,10 +22,10 @@ namespace RazorClassLibrary
             return base.SaveChangesAsync(cancellationToken);
         }
 
-        public override void Dispose()
-        {
-            Console.WriteLine($"DbContext2.Dispose");
-            base.Dispose();
-        }
+        //public override void Dispose()
+        //{
+        //    Console.WriteLine($"DbContext2.Dispose");
+        //    base.Dispose();
+        //}
     }
 }

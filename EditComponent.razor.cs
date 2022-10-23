@@ -140,8 +140,8 @@ namespace RazorClassLibrary
 
             Loading = true;
 
-            //todo
             //Context = new();
+            // хз нужно ли руками диспозить, пока оставил
             _context?.Dispose();
             _context = contextFactory.CreateDbContext();
 
@@ -163,7 +163,8 @@ namespace RazorClassLibrary
                 {
                     Entity = entity;
 
-                    // 
+                    // если так не делать, то при перевыборе например проекта в задаче
+                    // при сохранении будет эксепшон что такая ентитя уже тречится
                     _context.ChangeTracker.Clear();
                     _context.Entry(Entity).State = EntityState.Unchanged;
                 }
@@ -177,7 +178,7 @@ namespace RazorClassLibrary
 
         public void Dispose()
         {
-            Console.WriteLine($"EditComponent.Dispose");
+            //Console.WriteLine($"EditComponent.Dispose");
             _context.Dispose();
         }
     }
