@@ -65,6 +65,8 @@ namespace RazorClassLibrary
             //var f = new TFactory();
             var isNew = Entity.Id == 0;
 
+            //Context.ChangeTracker.Clear();
+
             if (Entity is ICreatedModified createdModifiedEntity)
             {
                 Context.Entry(createdModifiedEntity).Property(x => x.CreatedAt).IsModified = false;
@@ -155,6 +157,11 @@ namespace RazorClassLibrary
                 else
                 {
                     Entity = entity;
+
+                    //foreach (var item in Context.Entry(entity).Navigations)
+                    //{
+                    //    var q = item.EntityEntry;
+                    //}
                 }
             }
 
