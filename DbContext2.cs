@@ -10,22 +10,14 @@ namespace RazorClassLibrary
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            var entries = ChangeTracker.Entries();
+            //var entries = ChangeTracker.Entries().Where(x => x.Entity is ICreatedModified);
 
-            //foreach (var entry in entries)
+            //foreach (var entry in entries.Where(x => x.State == EntityState.Added))
             //{
-            //    Console.WriteLine($"{entry.Entity} {entry.State}");
-            //}
 
-            //Console.WriteLine($"{ChangeTracker.DebugView.ShortView}");
+            //}
 
             return base.SaveChangesAsync(cancellationToken);
         }
-
-        //public override void Dispose()
-        //{
-        //    Console.WriteLine($"DbContext2.Dispose");
-        //    base.Dispose();
-        //}
     }
 }
