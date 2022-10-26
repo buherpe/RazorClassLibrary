@@ -1,7 +1,7 @@
 ﻿namespace RazorClassLibrary
 {
     public partial class DataGridComponent<TEntity>
-        where TEntity : class
+        where TEntity : class, IEntity
     {
     }
 }

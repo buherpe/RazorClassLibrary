@@ -29,6 +29,36 @@ else
         }
         <div class="ms-auto">
             <div class="input-group">
+                <button class="btn btn-outline-secondary" type="button"
+                    disabled="@(TotalPages == 1 || CurrentPage == 1)"
+                    @onclick="FirstPageClick" title="Первая страница">
+                    <span>&laquo;</span>
+                </button>
+                <button class="btn btn-outline-secondary" type="button"
+                    disabled="@(TotalPages == 1 || CurrentPage == 1)"
+                    @onclick="PreviousPageClick" title="Предыдущая страница">
+                    <span>&lsaquo;</span>
+                </button>
+                <span class="input-group-text">
+                    Записей:
+                    @(EntitiesTotalCount > PageSize
+                        ? $"{Entities.Count} из {EntitiesTotalCount} (стр. {CurrentPage}/{TotalPages})"
+                        : $"{Entities.Count}")
+                </span>
+                <button class="btn btn-outline-secondary" type="button"
+                    disabled="@(TotalPages == 1 || CurrentPage == TotalPages || Entities.Count == 0)"
+                    @onclick="NextPageClick" title="Следующая страница">
+                    <span>&rsaquo;</span>
+                </button>
+                <button class="btn btn-outline-secondary" type="button"
+                    disabled="@(TotalPages == 1 || CurrentPage == TotalPages || Entities.Count == 0)"
+                    @onclick="LastPageClick" title="Последняя страница">
+                    <span>&raquo;</span>
+                </button>
+            </div>
+        </div>
+        <div>
+            <div class="input-group">
                 <input class="form-control @(SearchTextIsDirty ? "is-dirty" : "")"
                    @bind="SearchText" @bind:event="oninput" @onkeydown="@SearchTextInputEnter"
                    placeholder="Поиск" />
@@ -128,7 +158,7 @@ else
     [CascadingParameter]
     BlazoredModalInstance BlazoredModal { get; set; } = default!;
 
-    public List<IEntity> Entities { get; set; } = new List<IEntity>();
+    public List<TEntity> Entities { get; set; } = new List<TEntity>();
 
     private string _searchText;
 
@@ -146,6 +176,14 @@ else
     }
 
     public bool SearchTextIsDirty { get; set; } = false;
+
+    public int EntitiesTotalCount { get; set; }
+
+    public int PageSize { get; set; } = 100;
+
+    public int CurrentPage { get; set; } = 1;
+
+    public int TotalPages { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -173,7 +211,22 @@ else
             .Select(x => x.FieldAttribute.DisplayName)
             .ToList();
 
-        Entities = await View.GetData(SearchText).Cast<IEntity>().AsNoTracking().ToListAsync();
+        var data = View.GetData(SearchText).Cast<TEntity>().AsNoTracking();
+        EntitiesTotalCount = data.Count();
+
+        TotalPages = (int)Math.Ceiling(EntitiesTotalCount / (decimal)PageSize);
+
+        var paginatedData = data.Skip(PageSize * (CurrentPage - 1)).Take(PageSize);
+
+        // если находимся на например десятой странице и ищем что-то,
+        // то страниц становится меньше, делаем первую
+        if (paginatedData.Count() == 0)
+        {
+            CurrentPage = 1;
+            paginatedData = data.Skip(PageSize * (CurrentPage - 1)).Take(PageSize);
+        }
+
+        Entities = await paginatedData.ToListAsync();
 
         //#if DEBUG
         //    await Task.Delay(500);
@@ -296,6 +349,30 @@ else
     public async Task ClearSearchText()
     {
         SearchText = "";
+        await LoadData();
+    }
+
+    public async Task FirstPageClick()
+    {
+        CurrentPage = 1;
+        await LoadData();
+    }
+
+    public async Task PreviousPageClick()
+    {
+        CurrentPage--;
+        await LoadData();
+    }
+
+    public async Task NextPageClick()
+    {
+        CurrentPage++;
+        await LoadData();
+    }
+
+    public async Task LastPageClick()
+    {
+        CurrentPage = TotalPages;
         await LoadData();
     }
 }
