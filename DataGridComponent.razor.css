@@ -7,3 +7,13 @@ th, td {
     text-overflow: ellipsis;
     overflow: hidden;*/
 }
+
+/*.form-control.is-invalid {
+    border-color: #ced4da;
+    background-color: #fffdda;
+    background-image: none;
+}*/
+
+.is-dirty {
+    background-color: #fffdda;
+}

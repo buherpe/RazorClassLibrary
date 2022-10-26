@@ -28,7 +28,19 @@ else
             </a>
         }
         <div class="ms-auto">
-            <button @onclick="DownloadFileFromStream" type="button" class="btn btn-outline-secondary" title="Скачать в CSV">
+            <div class="input-group">
+                <input class="form-control @(SearchTextIsDirty ? "is-dirty" : "")"
+                   @bind="SearchText" @bind:event="oninput" @onkeydown="@SearchTextInputEnter"
+                   placeholder="Поиск" />
+                <button class="btn btn-outline-secondary" type="button"
+                    @onclick="ClearSearchText" title="Очистить">
+                    <span class="oi oi-x" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+        <div>
+            <button @onclick="DownloadFileFromStream" type="button" class="btn btn-outline-secondary"
+                title="Сохранить в CSV">
                 <span class="oi oi-data-transfer-download" aria-hidden="true"></span>
             </button>
         </div>
@@ -118,6 +130,23 @@ else
 
     public List<IEntity> Entities { get; set; } = new List<IEntity>();
 
+    private string _searchText;
+
+    public string SearchText
+    {
+        get
+        {
+            return _searchText;
+        }
+        set
+        {
+            _searchText = value;
+            SearchTextIsDirty = true;
+        }
+    }
+
+    public bool SearchTextIsDirty { get; set; } = false;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -144,7 +173,7 @@ else
             .Select(x => x.FieldAttribute.DisplayName)
             .ToList();
 
-        Entities = await View.GetData().Cast<IEntity>().AsNoTracking().ToListAsync();
+        Entities = await View.GetData(SearchText).Cast<IEntity>().AsNoTracking().ToListAsync();
 
         //#if DEBUG
         //    await Task.Delay(500);
@@ -198,6 +227,7 @@ else
             _entities.Add(fieldNameValue);
         }
 
+        SearchTextIsDirty = false;
         Loading = false;
     }
 
@@ -253,5 +283,19 @@ else
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
         await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
+
+    public async Task SearchTextInputEnter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await LoadData();
+        }
+    }
+
+    public async Task ClearSearchText()
+    {
+        SearchText = "";
+        await LoadData();
     }
 }

@@ -68,7 +68,8 @@ namespace RazorClassLibrary
 
             if (!string.IsNullOrEmpty(filter))
             {
-                users = users.Where(x => x.Username.ToLower().Contains(filter.ToLower()));
+                users = users.Where(x => x.Username.ToLower().Contains(filter.ToLower()) ||
+                                         x.Fullname.ToLower().Contains(filter.ToLower()));
             }
 
             return users.OrderByDescending(x => x.Id);
