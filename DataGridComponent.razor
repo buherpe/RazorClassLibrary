@@ -4,6 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.JSInterop
 @using System.Text
+@using System.Linq.Dynamic.Core;
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime;
 @inject DbContext _context;
@@ -81,14 +82,15 @@ else
         </div>
     </div>
 
-    @*  table-hover @ondblclick="() => TrClicked(entity)"*@
     <table class="table table-sm">
         <thead>
             <tr>
                 <th>@(ChooseOneEntity ? "Выбрать" : "Открыть")</th>
-                @foreach (var columnHeader in _fieldDisplayNames)
+                @foreach (var column in _columns)
                 {
-                    <th>@columnHeader</th>
+                    <th @onclick="() => OnColumnClick(column.PropertyName)">
+                        @column.DisplayName @(SortingColumn == column.PropertyName ? $"{(SortingDescending ? "⇓" : "⇑")}" : "")
+                    </th>
                 }
 
                 @if (DeleteButtonVisible)
@@ -135,7 +137,9 @@ else
     [Parameter]
     public IView View { get; set; }
 
-    private List<string> _fieldDisplayNames = new();
+    //private Dictionary<string, string> _fieldDisplayNames = new();
+
+    private List<Column> _columns = new();
 
     //private List<BaseView> _views = new();
 
@@ -179,11 +183,15 @@ else
 
     public int EntitiesTotalCount { get; set; }
 
-    public int PageSize { get; set; } = 100;
+    public int PageSize { get; set; } = 50;
 
     public int CurrentPage { get; set; } = 1;
 
     public int TotalPages { get; set; }
+
+    public string SortingColumn { get; set; } = "Id";
+
+    public bool SortingDescending { get; set; } = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -202,16 +210,35 @@ else
                 PropertyInfo = x,
                 FieldAttribute = x.GetCustomAttribute<FieldAttribute>(),
                 BindAttribute = x.GetCustomAttribute<RazorClassLibrary.BindAttribute>(),
+                SortAttribute = x.GetCustomAttribute<SortAttribute>(),
             })
             .Where(x => x.FieldAttribute != null)
             .ToList();
 
-        _fieldDisplayNames = props
+        _columns = props
             .Where(x => !x.FieldAttribute.Serviced)
-            .Select(x => x.FieldAttribute.DisplayName)
+            //.Select(x => x.FieldAttribute.DisplayName)
+            //.ToList();
+            //.ToDictionary(x => x.PropertyInfo.Name, x => x.FieldAttribute.DisplayName);
+            .Select(x => new Column
+                {
+                    PropertyName = x.PropertyInfo.Name,
+                    DisplayName = x.FieldAttribute.DisplayName,
+                    SortingKey = x.SortAttribute != null
+                            ? x.SortAttribute.Sort
+                            : x.BindAttribute != null
+                                ? $"{x.BindAttribute.Bind}"
+                                : $"{x.PropertyInfo.Name}"
+                })
             .ToList();
 
         var data = View.GetData(SearchText).Cast<TEntity>().AsNoTracking();
+
+        if (!string.IsNullOrEmpty(SortingColumn))
+        {
+            data = data.OrderBy($"{_columns.FirstOrDefault(x => x.PropertyName == SortingColumn).SortingKey}{(SortingDescending ? " desc" : "")}");
+        }
+
         EntitiesTotalCount = data.Count();
 
         TotalPages = (int)Math.Ceiling(EntitiesTotalCount / (decimal)PageSize);
@@ -314,7 +341,7 @@ else
 
     private Stream GetFileStream()
     {
-        var columns = string.Join(",", _fieldDisplayNames.Select(x => Helper.StringToCSVCell(x)));
+        var columns = string.Join(",", _columns.Select(x => Helper.StringToCSVCell(x.DisplayName)));
 
         var data = $"";
 
@@ -374,5 +401,38 @@ else
     {
         CurrentPage = TotalPages;
         await LoadData();
+    }
+
+    public async Task OnColumnClick(string columnKey)
+    {
+        //Console.WriteLine($"OnColumnClick: columnKey: {columnKey}");
+
+        if (SortingColumn != columnKey)
+        {
+            SortingColumn = columnKey;
+            SortingDescending = false;
+        }
+        else
+        {
+            if (!SortingDescending)
+            {
+                SortingDescending = true;
+            }
+            else
+            {
+                SortingColumn = "";
+            }
+        }
+
+        await LoadData();
+    }
+
+    public class Column
+    {
+        public string PropertyName { get; set; }
+
+        public string DisplayName { get; set; }
+
+        public string SortingKey { get; set; }
     }
 }

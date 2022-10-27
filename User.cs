@@ -72,7 +72,7 @@ namespace RazorClassLibrary
                                          x.Fullname.ToLower().Contains(filter.ToLower()));
             }
 
-            return users.OrderByDescending(x => x.Id);
+            return users;
         }
     }
 

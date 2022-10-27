@@ -36,4 +36,14 @@ namespace RazorClassLibrary
         //    Bind2 = func;
         //}
     }
+
+    public class SortAttribute : Attribute
+    {
+        public string Sort { get; set; }
+
+        public SortAttribute(string sort)
+        {
+            Sort = sort;
+        }
+    }
 }
