@@ -65,19 +65,19 @@ else
                    placeholder="Поиск" />
                 <button class="btn btn-outline-secondary" type="button"
                     @onclick="ClearSearchText" title="Очистить">
-                    <span class="oi oi-x" aria-hidden="true"></span>
+                    <i class="bi bi-x-lg"></i>
                 </button>
             </div>
         </div>
         <div>
             <button @onclick="DownloadFileFromStream" type="button" class="btn btn-outline-secondary"
                 title="Сохранить в CSV">
-                <span class="oi oi-data-transfer-download" aria-hidden="true"></span>
+                <i class="bi bi-download"></i>
             </button>
         </div>
         <div>
             <button @onclick="LoadData" type="button" class="btn btn-outline-secondary" title="Обновить">
-                <span class="oi oi-loop-circular" aria-hidden="true"></span>
+                <i class="bi bi-arrow-clockwise"></i>
             </button>
         </div>
     </div>
@@ -93,17 +93,15 @@ else
                         <div class="hstack gap-3">
                             <div>@column.DisplayName</div>
                             <div class="ms-auto">
-                                @(SortingColumn == column.PropertyName ? $"{(SortingDescending ? "⇓" : "⇑")}" : "")
                                 @if (SortingColumn == column.PropertyName)
                                 {
                                     @if (SortingDescending)
                                     {
-                                        <span class="oi oi-sort-down" aria-hidden="true"></span>
                                         <i class="bi bi-sort-down"></i>
                                     }
                                     else
                                     {
-                                        <span class="oi oi-sort-up" aria-hidden="true"></span>
+                                        <i class="bi bi-sort-up"></i>
                                     }
                                 }
                             </div>
@@ -129,7 +127,7 @@ else
                         else
                         {
                             <a class="btn btn-outline-secondary" href="@($"/{View.GetEntityNames()}/{entity["Id"]}")" role="button">
-                                <span class="oi oi-magnifying-glass" aria-hidden="true"></span>
+                                <i class="bi bi-search"></i>
                             </a>
                         }
                     </td>

@@ -7,25 +7,25 @@
 <input class="form-control @FieldCssClasses" value="@Entity" type="text" readonly />
 
 <button class="btn btn-outline-secondary" type="button" @onclick="Clear" title="Очистить">
-    <span class="oi oi-x" aria-hidden="true"></span>
+    <i class="bi bi-x-lg"></i>
 </button>
 
 @if (Entity == null)
 {
     <a class="btn btn-outline-secondary" role="button" title="Открыть">
-        <span class="oi oi-magnifying-glass" aria-hidden="true"></span>
+        <i class="bi bi-search"></i>
     </a>
 }
 else
 {
     <a class="btn btn-outline-secondary" role="button" title="Открыть"
    href="@($"/{View.GetEntityNames()}/{Entity.Id}")">
-        <span class="oi oi-magnifying-glass" aria-hidden="true"></span>
+        <i class="bi bi-search"></i>
     </a>
 }
 
 <button class="btn btn-outline-secondary" type="button" @onclick="Open" title="Выбрать">
-    <span class="oi oi-ellipses" aria-hidden="true"></span>
+    <i class="bi bi-three-dots"></i>
 </button>
 
 @code {
