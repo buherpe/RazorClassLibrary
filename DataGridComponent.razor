@@ -220,7 +220,7 @@ else
 
         // если находимся на например десятой странице и ищем что-то,
         // то страниц становится меньше, делаем первую
-        if (paginatedData.Count() == 0)
+        if (CurrentPage != 1 && paginatedData.Count() == 0)
         {
             CurrentPage = 1;
             paginatedData = data.Skip(PageSize * (CurrentPage - 1)).Take(PageSize);
