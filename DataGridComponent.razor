@@ -89,7 +89,6 @@ else
                 @foreach (var column in _columns)
                 {
                     <th @onclick="() => OnColumnClick(column.PropertyName)">
-
                         <div class="hstack gap-3">
                             <div>@column.DisplayName</div>
                             <div class="ms-auto">
