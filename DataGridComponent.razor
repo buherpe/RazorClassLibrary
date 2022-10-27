@@ -82,14 +82,31 @@ else
         </div>
     </div>
 
-    <table class="table table-sm">
+    <table class="table table-sm table-bordered table-striped">
         <thead>
             <tr>
                 <th>@(ChooseOneEntity ? "Выбрать" : "Открыть")</th>
                 @foreach (var column in _columns)
                 {
                     <th @onclick="() => OnColumnClick(column.PropertyName)">
-                        @column.DisplayName @(SortingColumn == column.PropertyName ? $"{(SortingDescending ? "⇓" : "⇑")}" : "")
+
+                        <div class="hstack gap-3">
+                            <div>@column.DisplayName</div>
+                            <div class="ms-auto">
+                                @(SortingColumn == column.PropertyName ? $"{(SortingDescending ? "⇓" : "⇑")}" : "")
+                                @if (SortingColumn == column.PropertyName)
+                                {
+                                    @if (SortingDescending)
+                                    {
+                                        <span class="oi oi-sort-down" aria-hidden="true"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="oi oi-sort-up" aria-hidden="true"></span>
+                                    }
+                                }
+                            </div>
+                        </div>
                     </th>
                 }
 
@@ -225,10 +242,10 @@ else
                     PropertyName = x.PropertyInfo.Name,
                     DisplayName = x.FieldAttribute.DisplayName,
                     SortingKey = x.SortAttribute != null
-                            ? x.SortAttribute.Sort
-                            : x.BindAttribute != null
-                                ? $"{x.BindAttribute.Bind}"
-                                : $"{x.PropertyInfo.Name}"
+                                            ? x.SortAttribute.Sort
+                                            : x.BindAttribute != null
+                                                ? $"{x.BindAttribute.Bind}"
+                                                : $"{x.PropertyInfo.Name}"
                 })
             .ToList();
 
