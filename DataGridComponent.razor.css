@@ -1,12 +1,12 @@
-﻿table {
-    /*table-layout: fixed;*/
+﻿/*table {
+    table-layout: fixed;
 }
 
 th, td {
-    /*white-space: nowrap;
+    white-space: nowrap;
     text-overflow: ellipsis;
-    overflow: hidden;*/
-}
+    overflow: hidden;
+}*/
 
 /*.form-control.is-invalid {
     border-color: #ced4da;
@@ -16,4 +16,10 @@ th, td {
 
 .is-dirty {
     background-color: #fffdda;
+}
+
+.table td.fit,
+.table th.fit {
+    white-space: nowrap;
+    width: 1%;
 }

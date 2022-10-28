@@ -15,12 +15,13 @@
     <h3>@View.GetNames()</h3>
 }
 
-@if (Loading)
+@*@if (Loading)
 {
     <div>Загрузка...</div>
 }
-else
-{
+else*@
+
+<div class="@(Loading ? "opacity-25" : "")">
     <div class="hstack gap-3">
         @if (CreateButtonVisible)
         {
@@ -31,13 +32,13 @@ else
         <div class="ms-auto">
             <div class="input-group">
                 <button class="btn btn-outline-secondary" type="button"
-                    disabled="@(TotalPages == 1 || CurrentPage == 1)"
-                    @onclick="FirstPageClick" title="Первая страница">
+                        disabled="@(TotalPages == 1 || CurrentPage == 1)"
+                        @onclick="FirstPageClick" title="Первая страница">
                     <span>&laquo;</span>
                 </button>
                 <button class="btn btn-outline-secondary" type="button"
-                    disabled="@(TotalPages == 1 || CurrentPage == 1)"
-                    @onclick="PreviousPageClick" title="Предыдущая страница">
+                        disabled="@(TotalPages == 1 || CurrentPage == 1)"
+                        @onclick="PreviousPageClick" title="Предыдущая страница">
                     <span>&lsaquo;</span>
                 </button>
                 <span class="input-group-text">
@@ -47,13 +48,13 @@ else
                         : $"{Entities.Count}")
                 </span>
                 <button class="btn btn-outline-secondary" type="button"
-                    disabled="@(TotalPages == 1 || CurrentPage == TotalPages || Entities.Count == 0)"
-                    @onclick="NextPageClick" title="Следующая страница">
+                        disabled="@(TotalPages == 1 || CurrentPage == TotalPages || Entities.Count == 0)"
+                        @onclick="NextPageClick" title="Следующая страница">
                     <span>&rsaquo;</span>
                 </button>
                 <button class="btn btn-outline-secondary" type="button"
-                    disabled="@(TotalPages == 1 || CurrentPage == TotalPages || Entities.Count == 0)"
-                    @onclick="LastPageClick" title="Последняя страница">
+                        disabled="@(TotalPages == 1 || CurrentPage == TotalPages || Entities.Count == 0)"
+                        @onclick="LastPageClick" title="Последняя страница">
                     <span>&raquo;</span>
                 </button>
             </div>
@@ -61,17 +62,17 @@ else
         <div>
             <div class="input-group">
                 <input class="form-control @(SearchTextIsDirty ? "is-dirty" : "")"
-                   @bind="SearchText" @bind:event="oninput" @onkeydown="@SearchTextInputEnter"
-                   placeholder="Поиск" />
+                       @bind="SearchText" @bind:event="oninput" @onkeydown="@SearchTextInputEnter"
+                       placeholder="Поиск" />
                 <button class="btn btn-outline-secondary" type="button"
-                    @onclick="ClearSearchText" title="Очистить">
+                        @onclick="ClearSearchText" title="Очистить">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
         </div>
         <div>
             <button @onclick="DownloadFileFromStream" type="button" class="btn btn-outline-secondary"
-                title="Сохранить в CSV">
+                    title="Сохранить в CSV">
                 <i class="bi bi-download"></i>
             </button>
         </div>
@@ -81,14 +82,14 @@ else
             </button>
         </div>
     </div>
-
+    <br />
     <table class="table table-sm table-bordered table-striped">
         <thead>
             <tr>
-                <th>@(ChooseOneEntity ? "Выбрать" : "Открыть")</th>
+                <th class="fit">@(ChooseOneEntity ? "Выбрать" : "Открыть")</th>
                 @foreach (var column in _columns)
                 {
-                    <th @onclick="() => OnColumnClick(column.PropertyName)">
+                    <th @onclick="() => OnColumnClick(column.PropertyName)" role="button">
                         <div class="hstack gap-3">
                             <div>@column.DisplayName</div>
                             <div class="ms-auto">
@@ -110,7 +111,7 @@ else
 
                 @if (DeleteButtonVisible)
                 {
-                    <th></th>
+                    <th class="fit"></th>
                 }
             </tr>
         </thead>
@@ -145,7 +146,7 @@ else
             }
         </tbody>
     </table>
-}
+</div>
 
 @code {
 
@@ -240,10 +241,10 @@ else
                     PropertyName = x.PropertyInfo.Name,
                     DisplayName = x.FieldAttribute.DisplayName,
                     SortingKey = x.SortAttribute != null
-                                            ? x.SortAttribute.Sort
-                                            : x.BindAttribute != null
-                                                ? $"{x.BindAttribute.Bind}"
-                                                : $"{x.PropertyInfo.Name}"
+                                                        ? x.SortAttribute.Sort
+                                                        : x.BindAttribute != null
+                                                            ? $"{x.BindAttribute.Bind}"
+                                                            : $"{x.PropertyInfo.Name}"
                 })
             .ToList();
 
