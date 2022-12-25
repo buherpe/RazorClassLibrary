@@ -133,7 +133,7 @@ namespace RazorClassLibrary
                 {
             new Claim("Id", userId.ToString()),
                 }),
-                Expires = DateTime.UtcNow.AddDays(7),
+                Expires = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Authentication:JwtBearer:ExpiresDays")),
                 Issuer = _configuration["Authentication:JwtBearer:Issuer"],
                 Audience = _configuration["Authentication:JwtBearer:Audience"],
                 SigningCredentials = new SigningCredentials(mySecurityKey, SecurityAlgorithms.HmacSha256Signature)
