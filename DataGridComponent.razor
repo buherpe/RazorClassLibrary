@@ -10,6 +10,11 @@
 @inject DbContext _context;
 @typeparam TEntity
 
+@if (SetPageTitle)
+{
+    <PageTitle>@View.GetNames()</PageTitle>
+}
+
 @if (ShowHeader)
 {
     <h3>@View.GetNames()</h3>
@@ -171,9 +176,12 @@ else*@
 
     [Parameter]
     public bool DeleteButtonVisible { get; set; } = true;
-
+    
     [Parameter]
     public bool ShowHeader { get; set; } = true;
+
+    [Parameter]
+    public bool SetPageTitle { get; set; } = false;
 
     [CascadingParameter]
     BlazoredModalInstance BlazoredModal { get; set; } = default!;
