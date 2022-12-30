@@ -13,7 +13,7 @@ namespace RazorClassLibrary
     public partial class EditComponent<TEntity, TView, TContext> : IDisposable
         where TEntity : class, IEntity, ICreatedModified, new()
         where TView : BaseView<TEntity>, new()
-        where TContext : DbContext
+        where TContext : DbContext2
     {
         [Parameter]
         public int Id { get; set; }
@@ -70,30 +70,35 @@ namespace RazorClassLibrary
 
             //Context.ChangeTracker.Clear();
 
-            if (Entity is ICreatedModified createdModifiedEntity)
-            {
-                _context.Entry(createdModifiedEntity).Property(x => x.CreatedAt).IsModified = false;
-                _context.Entry(createdModifiedEntity).Property(x => x.CreatedById).IsModified = false;
+            //if (Entity is ICreatedModified createdModifiedEntity)
+            //{
+            //    _context.Entry(createdModifiedEntity).Property(x => x.CreatedAt).IsModified = false;
+            //    _context.Entry(createdModifiedEntity).Property(x => x.CreatedById).IsModified = false;
 
-                var user = (await AuthState).User;
+            //    var user = (await AuthState).User;
 
-                if (isNew)
-                {
-                    createdModifiedEntity.CreatedAt = DateTime.Now;
-                    createdModifiedEntity.CreatedById = int.Parse(user.FindFirst("Id").Value);
-                }
-                else
-                {
-                    _context.Entry(createdModifiedEntity).Property(x => x.ModifiedAt).IsModified = false;
-                    _context.Entry(createdModifiedEntity).Property(x => x.ModifiedById).IsModified = false;
+            //    if (isNew)
+            //    {
+            //        createdModifiedEntity.CreatedAt = DateTime.Now;
+            //        createdModifiedEntity.CreatedById = int.Parse(user.FindFirst("Id").Value);
+            //    }
+            //    else
+            //    {
+            //        _context.Entry(createdModifiedEntity).Property(x => x.ModifiedAt).IsModified = false;
+            //        _context.Entry(createdModifiedEntity).Property(x => x.ModifiedById).IsModified = false;
 
-                    if (_context.Entry(Entity).State == EntityState.Modified)
-                    {
-                        createdModifiedEntity.ModifiedAt = DateTime.Now;
-                        createdModifiedEntity.ModifiedById = int.Parse(user.FindFirst("Id").Value);
-                    }
-                }
-            }
+            //        if (_context.Entry(Entity).State == EntityState.Modified)
+            //        {
+            //            createdModifiedEntity.ModifiedAt = DateTime.Now;
+            //            createdModifiedEntity.ModifiedById = int.Parse(user.FindFirst("Id").Value);
+            //        }
+            //    }
+            //}
+
+            var user = (await AuthState).User;
+            _context.CurrentUserId = int.Parse(user.FindFirst("Id").Value);
+            //_context.SetCreatedModifiedToEntities();
+            _context.SetCreatedModifiedToEntity(Entity, DateTime.Now);
 
             //Console.WriteLine($"{Context.Entry(Entity).DebugView.LongView}");
 
@@ -114,7 +119,7 @@ namespace RazorClassLibrary
                 _context.Entry(existingEntity).CurrentValues.SetValues(Entity);
             }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveAsync(false);
 
             //await Context.Entry(Entity).ReloadAsync();
 
