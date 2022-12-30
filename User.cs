@@ -19,11 +19,15 @@ namespace RazorClassLibrary
 
         public DateTime? CreatedAt { get; set; }
 
-        public int? CreatedBy { get; set; }
+        public int? CreatedById { get; set; }
+
+        public User CreatedBy { get; set; }
 
         public DateTime? ModifiedAt { get; set; }
 
-        public int? ModifiedBy { get; set; }
+        public int? ModifiedById { get; set; }
+
+        public User ModifiedBy { get; set; }
 
         public override string ToString() => $"{Fullname}";
     }

@@ -1,3 +1,11 @@
-﻿.form-control[readonly] {
+﻿/*.form-control[readonly] {
     background-color: transparent;
+}*/
+
+.transparent-background {
+    background-color: transparent;
+}
+
+.grey-background {
+    background-color: #e9ecef;
 }

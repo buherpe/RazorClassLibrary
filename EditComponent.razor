@@ -28,11 +28,25 @@ else
     @if (Entity is ICreatedModified createdModifiedEntity)
     {
         <hr/>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Создано</span>
+            <LookupComponent2 TEntity="User" @bind-Entity="createdModifiedEntity.CreatedBy"
+                      View="@(new UserAllView(_context))" Readonly/>
+        </div>
+
         <div class="input-group mb-3">
             <span class="input-group-text">Дата создания</span>
             <input class="form-control" readonly
            @bind-value="createdModifiedEntity.CreatedAt" />
         </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Изменено</span>
+            <LookupComponent2 TEntity="User" @bind-Entity="createdModifiedEntity.ModifiedBy"
+                      View="@(new UserAllView(_context))" Readonly/>
+        </div>
+
         <div class="input-group mb-3">
             <span class="input-group-text">Дата изменения</span>
             <input class="form-control" readonly

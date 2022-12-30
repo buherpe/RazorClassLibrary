@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace RazorClassLibrary
 {
     public partial class EditComponent<TEntity, TView, TContext> : IDisposable
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IEntity, ICreatedModified, new()
         where TView : BaseView<TEntity>, new()
         where TContext : DbContext
     {
@@ -73,24 +73,24 @@ namespace RazorClassLibrary
             if (Entity is ICreatedModified createdModifiedEntity)
             {
                 _context.Entry(createdModifiedEntity).Property(x => x.CreatedAt).IsModified = false;
-                _context.Entry(createdModifiedEntity).Property(x => x.CreatedBy).IsModified = false;
+                _context.Entry(createdModifiedEntity).Property(x => x.CreatedById).IsModified = false;
 
                 var user = (await AuthState).User;
 
                 if (isNew)
                 {
                     createdModifiedEntity.CreatedAt = DateTime.Now;
-                    createdModifiedEntity.CreatedBy = int.Parse(user.FindFirst("Id").Value);
+                    createdModifiedEntity.CreatedById = int.Parse(user.FindFirst("Id").Value);
                 }
                 else
                 {
                     _context.Entry(createdModifiedEntity).Property(x => x.ModifiedAt).IsModified = false;
-                    _context.Entry(createdModifiedEntity).Property(x => x.ModifiedBy).IsModified = false;
+                    _context.Entry(createdModifiedEntity).Property(x => x.ModifiedById).IsModified = false;
 
                     if (_context.Entry(Entity).State == EntityState.Modified)
                     {
                         createdModifiedEntity.ModifiedAt = DateTime.Now;
-                        createdModifiedEntity.ModifiedBy = int.Parse(user.FindFirst("Id").Value);
+                        createdModifiedEntity.ModifiedById = int.Parse(user.FindFirst("Id").Value);
                     }
                 }
             }
@@ -99,7 +99,7 @@ namespace RazorClassLibrary
 
             // https://stackoverflow.com/a/50355281/6414543
             //Context.Set<TEntity>().Update(Entity);
-            var existingEntity = await View.Include(_context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == Entity.Id);
+            var existingEntity = await View.BaseInclude(_context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == Entity.Id);
 
             if (existingEntity == null)
             {
@@ -153,7 +153,7 @@ namespace RazorClassLibrary
             {
                 //await Task.Delay(500);
                 
-                var entity = await View.Include(_context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == id);
+                var entity = await View.BaseInclude(_context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == id);
 
                 if (entity == null)
                 {

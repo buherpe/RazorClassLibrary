@@ -28,7 +28,7 @@ namespace RazorClassLibrary
     }
 
     public class BaseView<TEntity> : IView
-        where TEntity : class, IEntity
+        where TEntity : class, IEntity, ICreatedModified
     {
         public virtual IQueryable GetData(string filter)
         {
@@ -58,6 +58,11 @@ namespace RazorClassLibrary
         public virtual void Qwe(IEntity entity)
         {
             throw new System.NotImplementedException();
+        }
+
+        public IQueryable<TEntity> BaseInclude(IQueryable<TEntity> queryable)
+        {
+            return Include(queryable.Include(x => x.CreatedBy).Include(x => x.ModifiedBy));
         }
 
         public virtual IQueryable<TEntity> Include(IQueryable<TEntity> queryable)

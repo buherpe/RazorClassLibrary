@@ -10,10 +10,14 @@ namespace RazorClassLibrary
     {
         DateTime? CreatedAt { get; set; }
 
-        int? CreatedBy { get; set; }
+        int? CreatedById { get; set; }
+
+        User CreatedBy { get; set; }
 
         DateTime? ModifiedAt { get; set; }
 
-        int? ModifiedBy { get; set; }
+        int? ModifiedById { get; set; }
+
+        User ModifiedBy { get; set; }
     }
 }
