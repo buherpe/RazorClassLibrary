@@ -57,6 +57,14 @@ namespace RazorClassLibrary
             }
         }
 
+        public void Add2(IEntity entity)
+        {
+            if (entity.Id == 0)
+            {
+                Add(entity);
+            }
+        }
+
         public Task<int> SaveAsync(bool setCreatedModified = true, CancellationToken cancellationToken = default)
         {
             if (setCreatedModified)
