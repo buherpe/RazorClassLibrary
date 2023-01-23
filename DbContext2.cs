@@ -57,7 +57,7 @@ namespace RazorClassLibrary
             }
         }
 
-        public void Add2(IEntity entity)
+        public void AddIfNew(IEntity entity)
         {
             if (entity.Id == 0)
             {
