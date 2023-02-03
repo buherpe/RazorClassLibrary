@@ -29,6 +29,8 @@ namespace RazorClassLibrary
 
         private TContext _context;
 
+        private int _id { get; set; }
+
         // https://stackoverflow.com/q/63955228
         // ситуация: Blazored.Modal вызывал ререндер и поэтому
         // OnParametersSetAsync срабатывал много раз, вызывая лишний Load
@@ -37,11 +39,28 @@ namespace RazorClassLibrary
         // потому что OnParametersSetAsync закомменчен
         // иначе он будет срабатывать каждый раз при смене наименования например
         protected override async Task OnInitializedAsync()
-        //protected override async Task OnParametersSetAsync()
         {
-            //Console.WriteLine($"OnInitializedAsync");
+            //Console.WriteLine($"OnInitializedAsync, {Id}, {_id}");
 
             await Load(Id);
+        }
+
+        protected override async Task OnParametersSetAsync()
+        {
+            //Console.WriteLine($"OnParametersSetAsync, {Id}, {_id}");
+
+            // если айди сменился, то загружаем
+            if (_id != 0 && Id != _id)
+            {
+                //Console.WriteLine($"OnParametersSetAsync: ");
+                await Load(Id);
+            }
+            else
+            {
+                _id = Id;
+            }
+
+            //Console.WriteLine($"OnParametersSetAsync, {Id}, {_id}");
         }
 
         //protected override void OnInitialized()
