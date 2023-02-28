@@ -8,17 +8,6 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime;
 @inject DbContext _context;
-@typeparam TEntity
-
-@if (SetPageTitle)
-{
-    <PageTitle>@View.GetNames()</PageTitle>
-}
-
-@if (ShowHeader)
-{
-    <h3>@View.GetNames()</h3>
-}
 
 @*@if (Loading)
 {
@@ -30,7 +19,7 @@ else*@
     <div class="hstack gap-3">
         @if (CreateButtonVisible)
         {
-            <a class="btn btn-primary" href="@($"/{View.GetEntityNames()}/0")" role="button">
+            <a class="btn btn-primary" href="@($"/{EntityNames}/0")" role="button">
                 Создать
             </a>
         }
@@ -92,7 +81,7 @@ else*@
         <thead>
             <tr>
                 <th class="fit">@(ChooseOneEntity ? "Выбрать" : "Открыть")</th>
-                @foreach (var column in _columns)
+                @foreach (var column in Columns)
                 {
                     <th @onclick="() => OnColumnClick(column.PropertyName)" role="button">
                         <div class="hstack gap-3">
@@ -121,7 +110,7 @@ else*@
             </tr>
         </thead>
         <tbody>
-            @foreach (var entity in _entities)
+            @foreach (var entity in Entities)
             {
                 <tr>
                     <td>
@@ -131,7 +120,7 @@ else*@
                         }
                         else
                         {
-                            <a class="btn btn-outline-secondary btn-sm" href="@($"/{View.GetEntityNames()}/{entity["Id"]}")" role="button">
+                            <a class="btn btn-outline-secondary btn-sm" href="@($"/{EntityNames}/{entity["Id"]}")" role="button">
                                 <i class="bi bi-search"></i>
                             </a>
                         }
@@ -155,16 +144,18 @@ else*@
 
 @code {
 
-    [Parameter]
-    public IView View { get; set; }
+    //[Parameter]
+    //public IView View { get; set; }
 
     //private Dictionary<string, string> _fieldDisplayNames = new();
 
-    private List<Column> _columns = new();
+    [Parameter]
+    public List<Column> Columns { get; set; } = new();
 
     //private List<BaseView> _views = new();
 
-    private List<Dictionary<string, string>> _entities = new();
+    [Parameter]
+    public List<Dictionary<string, string>> Entities { get; set; } = new();
 
     [Parameter]
     public bool CreateButtonVisible { get; set; } = true;
@@ -176,17 +167,14 @@ else*@
 
     [Parameter]
     public bool DeleteButtonVisible { get; set; } = true;
-    
-    [Parameter]
-    public bool ShowHeader { get; set; } = true;
 
     [Parameter]
-    public bool SetPageTitle { get; set; } = false;
+    public string EntityNames { get; set; }
 
     [CascadingParameter]
     BlazoredModalInstance BlazoredModal { get; set; } = default!;
 
-    public List<TEntity> Entities { get; set; } = new List<TEntity>();
+    //public List<IEntity> Entities { get; set; } = new List<IEntity>();
 
     private string _searchText;
 
@@ -205,8 +193,10 @@ else*@
 
     public bool SearchTextIsDirty { get; set; } = false;
 
+    [Parameter]
     public int EntitiesTotalCount { get; set; }
 
+    [Parameter]
     public int PageSize { get; set; } = 50;
 
     public int CurrentPage { get; set; } = 1;
@@ -217,6 +207,12 @@ else*@
 
     public bool SortingDescending { get; set; } = true;
 
+    [Parameter]
+    public EventCallback<LoadDataArgs> LoadDataAction { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnEntityDelete { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -224,122 +220,32 @@ else*@
 
     public async Task LoadData()
     {
+        //Console.WriteLine($"1: {SearchText}");
         Loading = true;
 
-        var props = View
-            .GetType()
-            .GetProperties()
-            .Select(x => new
-            {
-                PropertyInfo = x,
-                FieldAttribute = x.GetCustomAttribute<FieldAttribute>(),
-                BindAttribute = x.GetCustomAttribute<RazorClassLibrary.BindAttribute>(),
-                SortAttribute = x.GetCustomAttribute<SortAttribute>(),
-            })
-            .Where(x => x.FieldAttribute != null)
-            .ToList();
+        var loadDataArgs = new LoadDataArgs();
+        loadDataArgs.SearchText = SearchText;
+        loadDataArgs.CurrentPage = CurrentPage;
+        loadDataArgs.SortingColumn = SortingColumn;
+        loadDataArgs.SortingDescending = SortingDescending;
+        loadDataArgs.PageSize = PageSize;
 
-        _columns = props
-            .Where(x => !x.FieldAttribute.Serviced)
-            //.Select(x => x.FieldAttribute.DisplayName)
-            //.ToList();
-            //.ToDictionary(x => x.PropertyInfo.Name, x => x.FieldAttribute.DisplayName);
-            .Select(x => new Column
-                {
-                    PropertyName = x.PropertyInfo.Name,
-                    DisplayName = x.FieldAttribute.DisplayName,
-                    SortingKey = x.SortAttribute != null
-                                                        ? x.SortAttribute.Sort
-                                                        : x.BindAttribute != null
-                                                            ? $"{x.BindAttribute.Bind}"
-                                                            : $"{x.PropertyInfo.Name}"
-                })
-            .ToList();
+        await LoadDataAction.InvokeAsync(loadDataArgs);
 
-        var data = View.GetData(SearchText).Cast<TEntity>().AsNoTracking();
-
-        if (!string.IsNullOrEmpty(SortingColumn))
-        {
-            data = data.OrderBy($"{_columns.FirstOrDefault(x => x.PropertyName == SortingColumn).SortingKey}{(SortingDescending ? " desc" : "")}");
-        }
-
-        EntitiesTotalCount = data.Count();
-
+        //CurrentPage = loadDataArgs.CurrentPage;
         TotalPages = (int)Math.Ceiling(EntitiesTotalCount / (decimal)PageSize);
-
-        var paginatedData = data.Skip(PageSize * (CurrentPage - 1)).Take(PageSize);
-
-        // если находимся на например десятой странице и ищем что-то,
-        // то страниц становится меньше, делаем первую
-        if (CurrentPage != 1 && paginatedData.Count() == 0)
-        {
-            CurrentPage = 1;
-            paginatedData = data.Skip(PageSize * (CurrentPage - 1)).Take(PageSize);
-        }
-
-        Entities = await paginatedData.ToListAsync();
-
-        //#if DEBUG
-        //    await Task.Delay(500);
-        //#endif
-
-        _entities = new List<Dictionary<string, string>>();
-
-        foreach (var entity in Entities)
-        {
-            var viewType = View.GetType();
-            var newView = Activator.CreateInstance(viewType);
-
-            var fieldNameValue = new Dictionary<string, string>();
-
-            foreach (var prop in props)
-            {
-                if (prop.BindAttribute != null)
-                {
-                    var relatedEntityValue = Extensions.GetPropertyValue(entity, prop.BindAttribute.Bind);
-                    fieldNameValue.Add(prop.PropertyInfo.Name, $"{relatedEntityValue}");
-                    continue;
-                }
-
-                var entityProp = entity.GetType().GetProperty(prop.PropertyInfo.Name);
-                var entityValue = entityProp?.GetValue(entity);
-                //todo проверка типов?
-                var newViewProp = newView.GetType().GetProperty(prop.PropertyInfo.Name);
-
-                if (newViewProp.SetMethod != null)
-                {
-                    newViewProp.SetValue(newView, entityValue);
-                }
-
-                var newViewPropValue = newViewProp.GetValue(newView);
-
-                if (!prop.FieldAttribute.Serviced)
-                {
-                    var formattable = newViewPropValue as IFormattable;
-
-                    if (formattable != null && !string.IsNullOrEmpty(prop.FieldAttribute.Format))
-                    {
-                        fieldNameValue.Add(prop.PropertyInfo.Name, formattable.ToString(prop.FieldAttribute.Format, null));
-                    }
-                    else
-                    {
-                        fieldNameValue.Add(prop.PropertyInfo.Name, $"{newViewPropValue}");
-                    }
-                }
-            }
-
-            _entities.Add(fieldNameValue);
-        }
 
         SearchTextIsDirty = false;
         Loading = false;
+
+        //StateHasChanged();
     }
 
     public void ChooseOneEntityClicked(Dictionary<string, string> entity)
     {
-        var id = int.Parse(entity["Id"]);
+        //var id = int.Parse(entity["Id"]);
 
-        BlazoredModal.CloseAsync(ModalResult.Ok(Entities.FirstOrDefault(x => x.Id == id)));
+        BlazoredModal.CloseAsync(ModalResult.Ok(Entities.FirstOrDefault(x => x["Id"] == entity["Id"])));
     }
 
     public async Task TrClickedDelete(Dictionary<string, string> entity)
@@ -351,25 +257,23 @@ else*@
             return;
         }
 
-        var entity2 = await _context.Set<TEntity>().FindAsync(int.Parse(entity["Id"]));
-        _context.Remove(entity2);
-        await _context.SaveChangesAsync();
+        await OnEntityDelete.InvokeAsync(entity["Id"]);
 
         await LoadData();
     }
 
     public void Create()
     {
-        NavigationManager.NavigateTo($"/{View.GetEntityNames()}/0");
+        NavigationManager.NavigateTo($"/{EntityNames}/0");
     }
 
     private Stream GetFileStream()
     {
-        var columns = string.Join(",", _columns.Select(x => Helper.StringToCSVCell(x.DisplayName)));
+        var columns = string.Join(",", Columns.Select(x => Helper.StringToCSVCell(x.DisplayName)));
 
         var data = $"";
 
-        foreach (var entity in _entities)
+        foreach (var entity in Entities)
         {
             data += $"{string.Join(",", entity.Values.Select(x => Helper.StringToCSVCell(x)))}\r\n";
         }
@@ -449,5 +353,18 @@ else*@
         }
 
         await LoadData();
+    }
+
+    public class LoadDataArgs
+    {
+        public string SearchText { get; set; }
+
+        public int CurrentPage { get; set; }
+
+        public string SortingColumn { get; set; }
+
+        public bool SortingDescending { get; set; }
+
+        public int PageSize { get; set; }
     }
 }

@@ -1,0 +1,166 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using System.Linq.Dynamic.Core;
+@using System.Reflection;
+@inject DbContext _context;
+@typeparam TEntity
+
+@if (SetPageTitle)
+{
+    <PageTitle>@View.GetNames()</PageTitle>
+}
+
+@if (ShowHeader)
+{
+    <h3>@View.GetNames()</h3>
+}
+
+<RawDataGrid EntityNames="@View.GetEntityNames()"
+             EntitiesTotalCount="@EntitiesTotalCount"
+             Entities="@Entities"
+             Columns="@Columns"
+             LoadDataAction="@LoadData"
+             OnEntityDelete="@DeleteEntity"
+             CreateButtonVisible="@CreateButtonVisible" />
+
+@code {
+    [Parameter]
+    public IView View { get; set; }
+
+    private List<Column> Columns { get; set; } = new();
+
+    [Parameter]
+    public bool SetPageTitle { get; set; } = false;
+
+    [Parameter]
+    public bool ShowHeader { get; set; } = true;
+
+    public int EntitiesTotalCount { get; set; }
+
+    public List<Dictionary<string, string>> Entities { get; set; } = new();
+
+    //public bool Loading { get; set; } = true;
+
+    [Parameter]
+    public bool CreateButtonVisible { get; set; } = true;
+
+    public async Task LoadData(RawDataGrid.LoadDataArgs args)
+    {
+        //Loading = true;
+
+        var props = View
+            .GetType()
+            .GetProperties()
+            .Select(x => new
+            {
+                PropertyInfo = x,
+                FieldAttribute = x.GetCustomAttribute<FieldAttribute>(),
+                BindAttribute = x.GetCustomAttribute<RazorClassLibrary.BindAttribute>(),
+                SortAttribute = x.GetCustomAttribute<SortAttribute>(),
+            })
+            .Where(x => x.FieldAttribute != null)
+            .ToList();
+
+        Columns = props
+            .Where(x => !x.FieldAttribute.Serviced)
+            //.Select(x => x.FieldAttribute.DisplayName)
+            //.ToList();
+            //.ToDictionary(x => x.PropertyInfo.Name, x => x.FieldAttribute.DisplayName);
+            .Select(x => new Column
+                {
+                    PropertyName = x.PropertyInfo.Name,
+                    DisplayName = x.FieldAttribute.DisplayName,
+                    SortingKey = x.SortAttribute != null
+                                                ? x.SortAttribute.Sort
+                                                : x.BindAttribute != null
+                                                    ? $"{x.BindAttribute.Bind}"
+                                                    : $"{x.PropertyInfo.Name}"
+                })
+            .ToList();
+
+        var data = View.GetData(args.SearchText).Cast<TEntity>().AsNoTracking();
+
+        if (!string.IsNullOrEmpty(args.SortingColumn))
+        {
+            data = data.OrderBy($"{Columns.FirstOrDefault(x => x.PropertyName == args.SortingColumn).SortingKey}{(args.SortingDescending ? " desc" : "")}");
+        }
+
+        EntitiesTotalCount = data.Count();
+
+        var paginatedData = data.Skip(args.PageSize * (args.CurrentPage - 1)).Take(args.PageSize);
+
+        // если находимся на например десятой странице и ищем что-то,
+        // то страниц становится меньше, делаем первую
+        // FA: не делаем первую. просто берем
+        if (args.CurrentPage != 1 && paginatedData.Count() == 0)
+        {
+            //args.CurrentPage = 1;
+            //paginatedData = data.Skip(args.PageSize * (args.CurrentPage - 1)).Take(args.PageSize);
+            paginatedData = data.Take(args.PageSize);
+        }
+
+        var entities = await paginatedData.ToListAsync();
+
+        //#if DEBUG
+        //    await Task.Delay(500);
+        //#endif
+
+        Entities.Clear();
+
+        foreach (var entity in entities)
+        {
+            var viewType = View.GetType();
+            var newView = Activator.CreateInstance(viewType);
+
+            var fieldNameValue = new Dictionary<string, string>();
+
+            foreach (var prop in props)
+            {
+                if (prop.BindAttribute != null)
+                {
+                    var relatedEntityValue = Extensions.GetPropertyValue(entity, prop.BindAttribute.Bind);
+                    fieldNameValue.Add(prop.PropertyInfo.Name, $"{relatedEntityValue}");
+                    continue;
+                }
+
+                var entityProp = entity.GetType().GetProperty(prop.PropertyInfo.Name);
+                var entityValue = entityProp?.GetValue(entity);
+                //todo проверка типов?
+                var newViewProp = newView.GetType().GetProperty(prop.PropertyInfo.Name);
+
+                if (newViewProp.SetMethod != null)
+                {
+                    newViewProp.SetValue(newView, entityValue);
+                }
+
+                var newViewPropValue = newViewProp.GetValue(newView);
+
+                if (!prop.FieldAttribute.Serviced)
+                {
+                    var formattable = newViewPropValue as IFormattable;
+
+                    if (formattable != null && !string.IsNullOrEmpty(prop.FieldAttribute.Format))
+                    {
+                        fieldNameValue.Add(prop.PropertyInfo.Name, formattable.ToString(prop.FieldAttribute.Format, null));
+                    }
+                    else
+                    {
+                        fieldNameValue.Add(prop.PropertyInfo.Name, $"{newViewPropValue}");
+                    }
+                }
+            }
+
+            Entities.Add(fieldNameValue);
+        }
+
+        //Loading = false;
+    }
+
+    public async Task DeleteEntity(string entityId)
+    {
+        var entity = await _context.Set<TEntity>().FindAsync(int.Parse(entityId));
+
+        _context.Remove(entity);
+
+        await _context.SaveChangesAsync();
+    }
+}
