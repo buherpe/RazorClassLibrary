@@ -5,6 +5,7 @@
 @using Microsoft.JSInterop
 @using System.Text
 @using System.Linq.Dynamic.Core;
+@using SomeComponents;
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime;
 @inject DbContext _context;
@@ -365,13 +366,13 @@ else*@
 
     private Stream GetFileStream()
     {
-        var columns = string.Join(",", _columns.Select(x => Helper.StringToCSVCell(x.DisplayName)));
+        var columns = string.Join(",", _columns.Select(x => SomeComponents.RawDataGrid.StringToCSVCell(x.DisplayName)));
 
         var data = $"";
 
         foreach (var entity in _entities)
         {
-            data += $"{string.Join(",", entity.Values.Select(x => Helper.StringToCSVCell(x)))}\r\n";
+            data += $"{string.Join(",", entity.Values.Select(x => SomeComponents.RawDataGrid.StringToCSVCell(x)))}\r\n";
         }
 
         var fileStream = new MemoryStream(Encoding.UTF8.GetBytes($"{columns}\r\n{data}"));
