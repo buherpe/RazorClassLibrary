@@ -15,7 +15,7 @@
     <h3>@View.GetNames()</h3>
 }
 
-<RawDataGrid EntityNames="@View.GetEntityNames()"
+<RawDataGrid EntitiesLink="@($"/{View.GetEntityNames()}")"
              EntitiesTotalCount="@EntitiesTotalCount"
              Entities="@Entities"
              Columns="@Columns"
