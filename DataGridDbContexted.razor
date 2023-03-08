@@ -22,7 +22,9 @@
              LoadData="@LoadData"
              OnEntityDelete="@DeleteEntity"
              OnEntityChoose="@ChooseEntity"
-             CreateButtonVisible="@CreateButtonVisible" />
+             CreateButtonVisible="@CreateButtonVisible"
+             ChooseOneEntity="@ChooseOneEntity"
+             DeleteButtonVisible="@DeleteButtonVisible" />
 
 @code {
     [Parameter]
@@ -47,6 +49,14 @@
 
     [CascadingParameter]
     BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    [Parameter]
+    public bool ChooseOneEntity { get; set; } = false;
+
+    [Parameter]
+    public bool DeleteButtonVisible { get; set; } = true;
+
+    private List<TEntity> dbEntities;
 
     public async Task LoadData(LoadDataArgs args)
     {
@@ -103,7 +113,7 @@
             paginatedData = data.Take(args.PageSize);
         }
 
-        var entities = await paginatedData.ToListAsync();
+        dbEntities = await paginatedData.ToListAsync();
 
         //#if DEBUG
         //    await Task.Delay(500);
@@ -111,7 +121,7 @@
 
         Entities.Clear();
 
-        foreach (var entity in entities)
+        foreach (var entity in dbEntities)
         {
             var viewType = View.GetType();
             var newView = Activator.CreateInstance(viewType);
@@ -171,6 +181,7 @@
 
     public async Task ChooseEntity(string entityId)
     {
-        await BlazoredModal.CloseAsync(ModalResult.Ok(Entities.FirstOrDefault(x => x["Id"] == entityId)));
+        var entity = dbEntities.FirstOrDefault(x => x.Id == int.Parse(entityId));
+        await BlazoredModal.CloseAsync(ModalResult.Ok(entity));
     }
 }

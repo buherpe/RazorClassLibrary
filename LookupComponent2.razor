@@ -66,14 +66,16 @@ else
 
     public async Task Open()
     {
-        var parameters = new ModalParameters();
-        parameters.Add(nameof(View), View);
-        parameters.Add("CreateButtonVisible", false);
-        parameters.Add("ChooseOneEntity", true);
-        parameters.Add("DeleteButtonVisible", false);
-        parameters.Add("ShowHeader", false);
+        var dataGrid = new DataGridDbContexted<TEntity>();
 
-        var modal = Modal.Show<DataGridComponent<TEntity>>(View.GetNames(), parameters);
+        var parameters = new ModalParameters();
+        parameters.Add(nameof(dataGrid.View), View);
+        parameters.Add(nameof(dataGrid.CreateButtonVisible), false);
+        parameters.Add(nameof(dataGrid.ChooseOneEntity), true);
+        parameters.Add(nameof(dataGrid.DeleteButtonVisible), false);
+        parameters.Add(nameof(dataGrid.ShowHeader), false);
+
+        var modal = Modal.Show<DataGridDbContexted<TEntity>>(View.GetNames(), parameters);
         var modalResult = await modal.Result;
 
         if (modalResult.Confirmed)
