@@ -147,6 +147,8 @@ namespace RazorClassLibrary
 
             //Entity = await View.Include(Context.Set<TEntity>()).FirstOrDefaultAsync(x => x.Id == Entity.Id);
 
+            toastService.ShowSuccess("Сохранено");
+
             if (isNew)
             {
                 NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
