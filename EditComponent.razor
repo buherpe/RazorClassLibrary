@@ -1,5 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.JSInterop;
 @typeparam TEntity
 @typeparam TView
 @typeparam TContext
@@ -7,6 +9,10 @@
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<TContext> contextFactory
 @inject IToastService toastService
+@inject IJSRuntime JSRuntime
+
+<NavigationLock ConfirmExternalNavigation="@ConfirmExternalNavigation"
+                OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
 <PageTitle>@View.GetName(): @Entity</PageTitle>
 
@@ -19,7 +25,7 @@
 else
 {
     <p>
-        <button @onclick="Save" type="button" class="btn btn-primary">Сохранить</button>
+        <button @onclick="SaveAndLoad" type="button" class="btn btn-primary">Сохранить</button>
 
         @AdditionalButtonsTemplate
     </p>
@@ -28,12 +34,12 @@ else
 
     @if (Entity is ICreatedModified createdModifiedEntity)
     {
-        <hr/>
+        <hr />
 
         <div class="input-group mb-3">
             <span class="input-group-text">Создано</span>
             <LookupComponent2 TEntity="User" @bind-Entity="createdModifiedEntity.CreatedBy"
-                      View="@(new UserAllView(_context))" Readonly/>
+                      View="@(new UserAllView(_context))" Readonly />
         </div>
 
         <div class="input-group mb-3">
@@ -45,7 +51,7 @@ else
         <div class="input-group mb-3">
             <span class="input-group-text">Изменено</span>
             <LookupComponent2 TEntity="User" @bind-Entity="createdModifiedEntity.ModifiedBy"
-                      View="@(new UserAllView(_context))" Readonly/>
+                      View="@(new UserAllView(_context))" Readonly />
         </div>
 
         <div class="input-group mb-3">
@@ -70,4 +76,52 @@ else
 
     [Parameter]
     public RenderFragment FooterTemplate { get; set; }
+
+    [CascadingParameter]
+    public IModalService Modal { get; set; } = default!;
+
+    public bool ConfirmExternalNavigation { get; set; }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        //Console.WriteLine($"OnBeforeInternalNavigation");
+
+        // если не меняли ентити, то не показываем модалку с сохранением
+        // и разрешаем переход на др. страницу
+        if (!EditContext.IsModified())
+        {
+            return;
+        }
+
+        var options = new ModalOptions()
+            {
+                Size = ModalSize.Automatic,
+                Position = ModalPosition.Middle
+            };
+
+        var modal = Modal.Show<DisplayMessage>("Сохранить изменения?", options);
+        var result = await modal.Result;
+
+        //Console.WriteLine($"Confirmed: {result.Confirmed}, " +
+        //                  $"Cancelled: {result.Cancelled}, " +
+        //                  $"Сохранить изменения: {result.Data}");
+
+        // если отменили решение, то запрещаем переход на др. страницу
+        if (result.Cancelled)
+        {
+            context.PreventNavigation();
+            return;
+        }
+
+        // если нажали "Да", то сохраняем
+        if ((bool)result.Data)
+        {
+            // если не сохранилось (например, неверное поле), то запрещаем переход на др. страницу
+            if (!await Save())
+            {
+                context.PreventNavigation();
+                return;
+            }
+        }
+    }
 }

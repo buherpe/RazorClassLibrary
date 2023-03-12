@@ -29,7 +29,7 @@ namespace RazorClassLibrary
 
         private TContext _context;
 
-        private int _id { get; set; }
+        private int? PrevId { get; set; }
 
         // https://stackoverflow.com/q/63955228
         // ситуация: Blazored.Modal вызывал ререндер и поэтому
@@ -38,27 +38,25 @@ namespace RazorClassLibrary
         // сейчас не будет работать переход например с таски 5 на 6,
         // потому что OnParametersSetAsync закомменчен
         // иначе он будет срабатывать каждый раз при смене наименования например
-        protected override async Task OnInitializedAsync()
-        {
-            //Console.WriteLine($"OnInitializedAsync, {Id}, {_id}");
+        //protected override async Task OnInitializedAsync()
+        //{
+        //    //Console.WriteLine($"OnInitializedAsync, {Id}, {_id}");
 
-            await Load(Id);
-        }
+        //    //await Load(Id);
+        //}
 
         protected override async Task OnParametersSetAsync()
         {
-            //Console.WriteLine($"OnParametersSetAsync, {Id}, {_id}");
+            //Console.WriteLine($"OnParametersSetAsync, Id: {Id}, PrevId: {PrevId}");
 
-            // если айди сменился, то загружаем
-            if (_id != 0 && Id != _id)
+            // если айди сменился или предыдущего нет (только создали), то загружаем
+            if (Id != PrevId || PrevId == null)
             {
                 //Console.WriteLine($"OnParametersSetAsync: ");
                 await Load(Id);
             }
-            else
-            {
-                _id = Id;
-            }
+
+            PrevId = Id;
 
             //Console.WriteLine($"OnParametersSetAsync, {Id}, {_id}");
         }
@@ -68,18 +66,18 @@ namespace RazorClassLibrary
         //    Console.WriteLine($"OnInitialized");
         //}
 
-        protected override void OnAfterRender(bool firstRender)
-        {
-            //Console.WriteLine($"OnAfterRenderAsync");
-        }
+        //protected override void OnAfterRender(bool firstRender)
+        //{
+        //    //Console.WriteLine($"OnAfterRenderAsync");
+        //}
 
-        public async Task Save()
+        public async Task<bool> Save()
         {
             //Console.WriteLine($"Save");
 
             if (!EditContext.Validate())
             {
-                return;
+                return false;
             }
 
             Loading = true;
@@ -140,6 +138,10 @@ namespace RazorClassLibrary
 
             await _context.SaveAsync(false);
 
+            EditContext.MarkAsUnmodified();
+
+            ConfirmExternalNavigation = false;
+
             //await Context.Entry(Entity).ReloadAsync();
 
             //Context = new TContext();
@@ -149,20 +151,23 @@ namespace RazorClassLibrary
 
             toastService.ShowSuccess("Сохранено");
 
-            if (isNew)
-            {
-                NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
-            }
+            //if (isNew)
+            //{
+            //    //Console.WriteLine($"navigate to /{View.GetEntityNames()}/{Entity.Id}");
+            //    NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
+            //}
 
             //Id = Entity.Id;
-            await Load(Entity.Id);
+            //await Load(Entity.Id);
 
             //Loading = false;
+
+            return true;
         }
 
         public async Task Load(int id)
         {
-            //Console.WriteLine($"Load");
+            //Console.WriteLine($"Load: id: {id}");
 
             Loading = true;
 
@@ -198,8 +203,36 @@ namespace RazorClassLibrary
 
             EditContext = new(Entity);
             EditContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
+            EditContext.OnFieldChanged += EditContext_OnFieldChanged;
 
             Loading = false;
+        }
+
+        private void EditContext_OnFieldChanged(object sender, FieldChangedEventArgs e)
+        {
+            ConfirmExternalNavigation = true;
+        }
+
+        public async Task SaveAndLoad()
+        {
+            var isNew = Entity.Id == 0;
+
+            if (!await Save())
+            {
+                return;
+            }
+
+            //Console.WriteLine($"{Entity.Id}");
+
+            if (isNew)
+            {
+                //Console.WriteLine($"navigate to /{View.GetEntityNames()}/{Entity.Id}");
+                NavigationManager.NavigateTo($"/{View.GetEntityNames()}/{Entity.Id}");
+            }
+            else
+            {
+                await Load(Entity.Id);
+            }
         }
 
         public void Dispose()
