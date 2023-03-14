@@ -14,9 +14,9 @@
 <NavigationLock ConfirmExternalNavigation="@ConfirmExternalNavigation"
                 OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
-<PageTitle>@View.GetName(): @Entity</PageTitle>
+<PageTitle>@View.GetName(): @Entity@(IsModifiedStar)</PageTitle>
 
-<h3>@View.GetName(): @Entity</h3>
+<h3>@View.GetName(): @Entity@(IsModifiedStar)</h3>
 
 @if (Loading)
 {
@@ -81,6 +81,8 @@ else
     public IModalService Modal { get; set; } = default!;
 
     public bool ConfirmExternalNavigation { get; set; }
+
+    public string IsModifiedStar => EditContext?.IsModified() ?? false ? "*" : "";
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
