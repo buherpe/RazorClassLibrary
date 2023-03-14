@@ -71,6 +71,9 @@ namespace RazorClassLibrary
         //    //Console.WriteLine($"OnAfterRenderAsync");
         //}
 
+        [Parameter]
+        public EventCallback<FieldChangedEventArgs> OnFieldChanged { get; set; }
+
         public async Task<bool> Save()
         {
             //Console.WriteLine($"Save");
@@ -203,14 +206,13 @@ namespace RazorClassLibrary
 
             EditContext = new(Entity);
             EditContext.SetFieldCssClassProvider(new CustomFieldClassProvider());
-            EditContext.OnFieldChanged += EditContext_OnFieldChanged;
+            EditContext.OnFieldChanged += async (sender, e) =>
+            {
+                await OnFieldChanged.InvokeAsync(e);
+                ConfirmExternalNavigation = true;
+            };
 
             Loading = false;
-        }
-
-        private void EditContext_OnFieldChanged(object sender, FieldChangedEventArgs e)
-        {
-            ConfirmExternalNavigation = true;
         }
 
         public async Task SaveAndLoad()
