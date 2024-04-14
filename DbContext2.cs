@@ -1,78 +1,72 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace RazorClassLibrary
+namespace RazorClassLibrary;
+
+public class DbContext2(DbContextOptions options) : DbContext(options)
 {
-    public class DbContext2 : DbContext
+    public int? CurrentUserId { get; set; }
+
+    public void SetCreatedModifiedToEntity(IEntity entity, DateTime dateTime)
     {
-        public int? CurrentUserId { get; set; }
-
-        public DbContext2(DbContextOptions options) : base(options)
+        if (entity is not ICreatedModified createdModifiedEntity)
         {
+            return;
         }
 
-        public void SetCreatedModifiedToEntity(IEntity entity, DateTime dateTime)
+        Entry(createdModifiedEntity).Property(x => x.CreatedAt).IsModified = false;
+        Entry(createdModifiedEntity).Property(x => x.CreatedById).IsModified = false;
+
+        if (entity.Id == 0)
         {
-            if (entity is not ICreatedModified createdModifiedEntity)
-            {
-                return;
-            }
+            createdModifiedEntity.CreatedAt = dateTime;
+            createdModifiedEntity.CreatedById = CurrentUserId;
+        }
+        else
+        {
+            Entry(createdModifiedEntity).Property(x => x.ModifiedAt).IsModified = false;
+            Entry(createdModifiedEntity).Property(x => x.ModifiedById).IsModified = false;
 
-            Entry(createdModifiedEntity).Property(x => x.CreatedAt).IsModified = false;
-            Entry(createdModifiedEntity).Property(x => x.CreatedById).IsModified = false;
-
-            if (entity.Id == 0)
+            if (Entry(entity).State == EntityState.Modified)
             {
-                createdModifiedEntity.CreatedAt = dateTime;
-                createdModifiedEntity.CreatedById = CurrentUserId;
-            }
-            else
-            {
-                Entry(createdModifiedEntity).Property(x => x.ModifiedAt).IsModified = false;
-                Entry(createdModifiedEntity).Property(x => x.ModifiedById).IsModified = false;
-
-                if (Entry(entity).State == EntityState.Modified)
-                {
-                    createdModifiedEntity.ModifiedAt = dateTime;
-                    createdModifiedEntity.ModifiedById = CurrentUserId;
-                }
+                createdModifiedEntity.ModifiedAt = dateTime;
+                createdModifiedEntity.ModifiedById = CurrentUserId;
             }
         }
+    }
 
-        public void SetCreatedModifiedToEntities()
+    public void SetCreatedModifiedToEntities()
+    {
+        var entries = ChangeTracker.Entries();
+
+        var now = DateTime.Now;
+
+        foreach (var entry in entries)
         {
-            var entries = ChangeTracker.Entries();
-
-            var now = DateTime.Now;
-
-            foreach (var entry in entries)
+            if (entry.Entity is not IEntity entity)
             {
-                if (entry.Entity is not IEntity entity)
-                {
-                    continue;
-                }
-
-                SetCreatedModifiedToEntity(entity, now);
-            }
-        }
-
-        public void AddIfNew(IEntity entity)
-        {
-            if (entity.Id == 0)
-            {
-                Add(entity);
-            }
-        }
-
-        public Task<int> SaveAsync(bool setCreatedModified = true, CancellationToken cancellationToken = default)
-        {
-            if (setCreatedModified)
-            {
-                SetCreatedModifiedToEntities();
+                continue;
             }
 
-            return base.SaveChangesAsync(cancellationToken);
+            SetCreatedModifiedToEntity(entity, now);
         }
+    }
+
+    public void AddIfNew(IEntity entity)
+    {
+        if (entity.Id == 0)
+        {
+            Add(entity);
+        }
+    }
+
+    public Task<int> SaveAsync(bool setCreatedModified = true, CancellationToken cancellationToken = default)
+    {
+        if (setCreatedModified)
+        {
+            SetCreatedModifiedToEntities();
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
     }
 }
